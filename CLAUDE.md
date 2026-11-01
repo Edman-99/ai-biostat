@@ -40,7 +40,8 @@ Claude Code читает CLAUDE.md автоматически.
 - Участники на сервере: `sudo aib-participants import файл.csv | reset КОД | list` (CSV: code;role;group;lang,
   role = student|specialist|teacher). Пароли — 6 цифр, печатаются на экран; в профиле можно сменить на свой (v0.5.0).
   Почту для сброса пароля НЕ делаем (решение: личные данные + нет домена для писем); студентам сбрасывает преподаватель.
-  Тестовый набор: T-0001 (teacher), S-0001 (specialist, SPEC-1), P-0001…P-0015 (student, KZ-301, lang kk).
+  На сервере 01.11.2026 участников НЕ было (тестовый набор так и не импортировали); T-0001 создан вручную через
+  aib-participants import. Студентов добавлять из панели преподавателя.
 
 ## Код (ai-biostat/)
 - `app/main.py` — FastAPI: /api/login, /logout, /me, PUT /profile, PUT /password (свой пароль, от 6 символов), GET/PUT /state (весь прогресс JSON, отсюда
