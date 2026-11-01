@@ -70,7 +70,18 @@
 Автообновление: если настроен cron /etc/cron.d/aib-autoupdate, сервер сам подтягивает ветку main каждые 2 минуты
 (лог: /var/log/aib-autoupdate.log) — достаточно сделать push на GitHub.
 
-## 5. Проверка после изменений
+## 5. Фронтенд (React + TypeScript)
+
+Исходники — в папке `frontend/`. Готовая сборка лежит в `static/` и хранится в git, поэтому серверу
+Node.js не нужен. После правок фронтенда (нужен Node.js 20+):
+
+       cd frontend
+       npm install        # один раз
+       npm test           # тесты логики (баллы, шкала, данные кейса)
+       npm run build      # собирает сайт в ../static
+       npm run dev        # режим разработки: http://localhost:5173 (сервер uvicorn должен работать на 8000)
+
+## 6. Проверка после изменений
 
        python -m pytest -q
 Должно быть: 5 passed.

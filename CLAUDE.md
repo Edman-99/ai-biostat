@@ -47,9 +47,19 @@ Claude Code читает CLAUDE.md автоматически.
   /teacher/overview, /teacher/disputes/{id} (решение обязательно с обоснованием), /teacher/confirm, /teacher/export/{attempts|events|diagnostics|disputes}.csv (только коды, разделитель ;, BOM для Excel).
 - `app/db.py` — SQLite, схема + миграция колонок first_name/last_name; журнал audit.
 - `app/security.py` — pbkdf2, токены сессий (cookie aib_session, httponly; AIB_SECURE_COOKIE=1 на сервере).
-- `static/index.html` — весь фронтенд одним файлом (vanilla JS, без сборки). Экраны: login, diag (демо 4 вопроса),
-  diagres, home, player (кейс 21, 10 шагов), profile, teacher (Проверка / Редактор кейсов — пока макет /
-  Диагностика — макет / Участники и выгрузка). Автосохранение state через PUT /api/state (debounce 600 мс).
+- `frontend/` — фронтенд: **React 18 + TypeScript + Vite**, i18n через react-i18next. Пользователь просил
+  придерживаться **SOLID и ООП**. Сборка (`npm run build` в frontend/) кладёт готовые файлы в `static/`, и **они
+  коммитятся в git**: сервер (t3.micro, 1 ГБ) ничего не собирает, автообновление работает как раньше.
+  После любой правки фронтенда: `cd frontend && npm test && npm run build`, затем коммитить и `static/`.
+  Структура: `core/` (HttpClient, Store), `api/` (классы AuthApi, ProgressApi, ResearchApi, DisputesApi, TeacherApi),
+  `domain/` (CaseDefinition — схема кейса как данные; scoring/ — StepScorer-стратегии + CaseScorer, DebriefBuilder;
+  GradeScale; code/CodeRunner — интерфейс, сейчас SimulatedCodeRunner, Pyodide/WebR будут новой реализацией;
+  diagnostic/), `cases/` (case21 + CaseRegistry — новый кейс = файл описания + строка в реестре),
+  `app/` (AppStore — состояние и все его изменения; services/ — SessionService, AutoSaver (600 мс), ResearchTracker,
+  LanguageService, ProgressSerializer; container.ts — точка сборки зависимостей), `screens/` (экраны и 10 шагов
+  плеера), `ui/`. Формат state на сервере не менялся (совместим со старой версией). Тесты логики: `npm test` (vitest).
+  Экраны: login, diag (демо 4 вопроса), diagres, home, player (кейс 21), profile, teacher (Проверка / Редактор
+  кейсов — макет / Диагностика — макет / Участники и выгрузка).
 - `tools/participants.py`, `deploy/setup.sh` (идемпотентная установка: apt, Caddy, venv, systemd, cron backup,
   /usr/local/bin/aib-participants), `tests/test_api.py` (5 тестов, `python -m pytest -q`).
 
@@ -84,6 +94,8 @@ Claude Code читает CLAUDE.md автоматически.
 ## Сделано
 Этап 1: сервер, вход по коду, автосохранение, оспаривания, панель преподавателя, выгрузка CSV, профиль
 (имя/фамилия; последняя версия могла ещё не быть залита на GitHub — сверить), убрана строка про Platonus/Moodle.
+Фронтенд переписан на React + TypeScript (ноябрь 2026, ветка react-frontend): поведение 1:1 со старой версией,
+проверено в браузере (студент — весь кейс 21, оспаривание; преподаватель — решение, подтверждение, участники).
 
 ## Дальше (по порядку)
 1. Залить актуальную версию (профиль) и проверить сайт.

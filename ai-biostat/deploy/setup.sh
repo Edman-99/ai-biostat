@@ -18,7 +18,7 @@ fi
 echo "==> 2/6 Код сайта в $APP"
 id aib >/dev/null 2>&1 || useradd --system --home "$APP" --shell /usr/sbin/nologin aib
 mkdir -p "$APP/data" "$APP/backups"
-rsync -a --delete --exclude data --exclude backups --exclude .git --exclude '.venv' "$SRC/" "$APP/"
+rsync -a --delete --exclude data --exclude backups --exclude .git --exclude '.venv' --exclude 'node_modules' "$SRC/" "$APP/"
 python3 -m venv "$APP/.venv"
 "$APP/.venv/bin/pip" install -q --upgrade pip
 "$APP/.venv/bin/pip" install -q fastapi uvicorn
