@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>AI-Biostat — предварительный флоу</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  color-scheme:light;
+  --paper:#F7FAFC; --surface:#FFFFFF; --ink:#1E2B37; --ink-2:#5E6E7D; --line:#E2E9EF; --line-2:#EEF3F7;
+  --accent:#1A86AD; --accent-hover:#16779A; --accent-soft:#EAF6FB; --accent-line:#BFE3F1;
+  --ok:#2F8A5F; --ok-soft:#EBF7F0; --warn:#A8670A; --warn-soft:#FDF5E7; --bad:#B8362C; --bad-soft:#FDEFED; --code-bg:#F4F8FA;
+  --font:'Golos Text', 'Segoe UI', Roboto, Arial, sans-serif; --mono:'JetBrains Mono', Consolas, 'Courier New', monospace;
+  --top-h:56px;
+  box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+*,*::before,*::after{box-sizing:border-box}
+html{height:100%; scroll-padding-top:calc(var(--top-h) + env(safe-area-inset-top,0px)); -webkit-text-size-adjust:100%}
+body{margin:0; min-height:100%; background:var(--paper); color:var(--ink); font-family:var(--font); font-size:15px; line-height:1.55}
+button,input,select,textarea{font:inherit; color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+h1{font-size:28px; line-height:1.2; margin:0 0 8px; font-weight:700; letter-spacing:-.01em}
+h2{font-size:20px; line-height:1.3; margin:0 0 8px; font-weight:600}
+h3{font-size:16px; margin:0 0 8px; font-weight:600}
+p{margin:0 0 12px; max-width:68ch}
+.muted{color:var(--ink-2)}
+.small{font-size:13px}
+/* top bar */
+.top{position:sticky; top:env(safe-area-inset-top,0px); z-index:5; display:flex; align-items:center; gap:14px; min-height:var(--top-h); padding:8px 20px; background:rgba(255,255,255,.92); backdrop-filter:blur(8px); border-bottom:1px solid var(--line)}
+.brand{font-weight:700; letter-spacing:-.01em; display:flex; align-items:center; gap:10px; white-space:nowrap}
+.mark{width:30px; height:30px; border-radius:8px; background:var(--accent-soft); color:var(--accent); border:1px solid var(--accent-line); display:grid; place-items:center; font-size:12px; font-weight:700}
+.top .grow{flex:1}
+.top .ctx{display:flex; align-items:center; gap:12px; min-width:0}
+.top .ctx .btn{white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:320px}
+.lang{display:inline-flex; border:1px solid var(--line); border-radius:9px; overflow:hidden; flex:none}
+.lang button{border:0; background:transparent; padding:6px 11px; font-size:13px; min-width:40px}
+.lang button[aria-pressed="true"]{background:var(--accent-soft); color:var(--accent); font-weight:600}
+.ver{font-size:12px; color:var(--warn); background:var(--warn-soft); padding:3px 9px; border-radius:6px; white-space:nowrap}
+/* layout */
+.wrap{max-width:1180px; margin:0 auto; padding:28px 20px 60px}
+.center{max-width:440px; margin:6vh auto 40px; padding:0 20px}
+.panel{background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:24px}
+.btn{border:1px solid var(--line); background:var(--surface); padding:10px 16px; min-height:42px; border-radius:10px; font-weight:500; transition:background .15s, border-color .15s}
+.btn:hover:not(:disabled){border-color:var(--accent-line); background:var(--accent-soft)}
+.btn.primary{background:var(--accent); border-color:var(--accent); color:#fff; font-weight:600}
+.btn.primary:hover:not(:disabled){background:var(--accent-hover); border-color:var(--accent-hover)}
+.btn:disabled{opacity:.45; cursor:not-allowed}
+.btn.ghost{border-color:transparent; background:transparent; color:var(--accent); padding-left:0; min-height:auto}
+.btn.ghost:hover:not(:disabled){background:transparent; text-decoration:underline}
+.hint{font-size:13px; color:var(--ink-2); margin-top:6px}
+label.f{display:block; font-size:13px; color:var(--ink-2); margin:14px 0 6px}
+input.t, textarea.t, select.t{width:100%; border:1px solid var(--line); border-radius:10px; padding:10px 12px; background:var(--surface); min-height:44px}
+input.t:focus, textarea.t:focus, select.t:focus{border-color:var(--accent-line); outline:2px solid var(--accent-soft); outline-offset:0}
+textarea.t{min-height:120px; resize:vertical; line-height:1.55}
+.row{display:flex; gap:12px; align-items:center; flex-wrap:wrap}
+.spread{display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap}
+/* role cards */
+.roles{display:grid; gap:12px; margin-top:16px}
+.role{text-align:left; border:1px solid var(--line); background:var(--surface); border-radius:14px; padding:16px 18px}
+.role[aria-pressed="true"]{border-color:var(--accent-line); box-shadow:inset 0 0 0 1px var(--accent-line); background:var(--accent-soft)}
+.role b{display:block; font-size:16px; margin-bottom:2px}
+/* diagnostics */
+.bar{height:6px; background:var(--line-2); border-radius:3px; overflow:hidden}
+.bar i{display:block; height:100%; background:var(--accent); border-radius:3px}
+.opts{display:grid; gap:8px; margin:16px 0}
+.opt{display:flex; gap:12px; align-items:flex-start; text-align:left; border:1px solid var(--line); background:var(--surface); border-radius:12px; padding:12px 14px; min-height:46px}
+.opt[aria-checked="true"]{border-color:var(--accent-line); background:var(--accent-soft)}
+.opt .dot{width:18px; height:18px; border-radius:50%; border:1.5px solid #9AA9B6; flex:none; margin-top:2px; background:var(--surface)}
+.opt[aria-checked="true"] .dot{border:5px solid var(--accent)}
+.opt.wrong{border-color:#F0C2BD; background:var(--bad-soft)}
+/* home */
+.home{display:grid; grid-template-columns:200px 1fr; gap:28px}
+.nav{display:flex; flex-direction:column; gap:2px}
+.nav button{text-align:left; border:0; background:transparent; padding:9px 12px; border-radius:9px; color:var(--ink); min-height:40px}
+.nav button[aria-current="page"]{background:var(--accent-soft); color:var(--accent); font-weight:600}
+.cont{border:1px solid var(--accent-line); background:linear-gradient(180deg,var(--accent-soft),var(--surface) 70%); border-radius:16px; padding:22px; display:flex; gap:20px; align-items:center; justify-content:space-between; flex-wrap:wrap}
+.cont .bar{width:260px; max-width:100%; margin-top:10px; background:#fff}
+.comps{display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin:24px 0}
+.comp{background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:12px 14px}
+.comp b{font-size:20px; display:block; margin:2px 0 6px}
+.cases{display:grid; gap:8px}
+.case{display:grid; grid-template-columns:44px 1fr auto; gap:14px; align-items:center; background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:12px 16px; text-align:left}
+.case .n{font-weight:700; color:var(--accent); font-size:18px}
+.case.locked{opacity:.55}
+.tag{font-size:12px; padding:2px 8px; border-radius:6px; background:var(--paper); border:1px solid var(--line); white-space:nowrap}
+/* player */
+.player{display:grid; grid-template-columns:220px minmax(0,1fr) 310px; min-height:calc(100vh - var(--top-h))}
+.steps{border-right:1px solid var(--line); background:var(--surface); padding:16px 10px}
+.steps ol{list-style:none; margin:0; padding:0}
+.steps button{display:flex; gap:10px; align-items:center; width:100%; text-align:left; border:0; background:transparent; padding:8px 10px; border-radius:9px; min-height:38px}
+.steps button[aria-current="step"]{background:var(--accent-soft); color:var(--accent); font-weight:600}
+.steps button:disabled{color:#9AA9B6; cursor:default}
+.sd{width:22px; height:22px; border-radius:50%; flex:none; display:grid; place-items:center; font-size:11px; border:1.5px solid var(--line); color:var(--ink-2); background:var(--surface)}
+.sd.done{background:var(--accent-soft); border-color:var(--accent-line); color:var(--accent); font-weight:700}
+.sd.cur{border-color:var(--accent); color:var(--accent); font-weight:700}
+.mstep{display:none}
+.stage{padding:28px 32px 40px; min-width:0}
+.stage h2{font-size:22px}
+.foot{position:sticky; bottom:0; background:linear-gradient(to top, var(--paper) 75%, rgba(247,250,252,0)); padding:18px 0 10px; display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-top:24px; z-index:3}
+.foot .why{font-size:13px; color:var(--ink-2); text-align:right; margin-top:6px}
+.foot .kbd{font-size:12px; color:#9AA9B6; text-align:right; margin-top:4px}
+.tutor{border-left:1px solid var(--line); background:var(--surface); display:flex; flex-direction:column; height:calc(100vh - var(--top-h)); position:sticky; top:var(--top-h)}
+.tutor header{padding:14px 16px 10px; border-bottom:1px solid var(--line)}
+.chips{display:flex; gap:6px; flex-wrap:wrap; margin-top:8px}
+.chip{font-size:12px; padding:2px 9px; border:1px solid var(--line); border-radius:12px; color:var(--ink-2); background:var(--surface)}
+.msgs{flex:1; overflow:auto; padding:14px 16px; display:flex; flex-direction:column; gap:10px}
+.msg{padding:10px 12px; border-radius:12px; font-size:14px; background:var(--paper); border:1px solid var(--line-2); max-width:92%}
+.msg.me{align-self:flex-end; background:var(--accent-soft); border-color:var(--accent-line)}
+.quick{display:flex; flex-direction:column; gap:6px; padding:0 16px 10px}
+.quick button{text-align:left; border:1px solid var(--line); background:var(--surface); border-radius:10px; padding:8px 11px; font-size:13px; min-height:38px}
+.quick button:hover{background:var(--accent-soft); border-color:var(--accent-line)}
+.ask{display:flex; gap:6px; padding:10px 16px 14px; border-top:1px solid var(--line)}
+.ask input{flex:1}
+.locked-ai{margin:16px; padding:14px; border-radius:12px; background:var(--paper); border:1px dashed var(--line); color:var(--ink-2); font-size:14px}
+.tutor-fab,.backdrop,#tclose{display:none}
+/* data */
+.tbl{overflow-x:auto; -webkit-overflow-scrolling:touch; border:1px solid var(--line); border-radius:12px; background:var(--surface)}
+table{border-collapse:collapse; width:100%; font-size:14px}
+th,td{padding:8px 12px; border-bottom:1px solid var(--line-2); text-align:left; white-space:nowrap}
+th{background:var(--paper); font-weight:600; font-size:13px; color:var(--ink-2)}
+tr.pick{cursor:pointer}
+tr.pick:hover td{background:var(--accent-soft)}
+tr.flag td{background:var(--warn-soft)}
+td.num{font-variant-numeric:tabular-nums}
+.note{border-left:3px solid var(--accent-line); background:var(--accent-soft); padding:10px 14px; border-radius:0 10px 10px 0; margin:14px 0; font-size:14px; max-width:72ch}
+.note.warn{border-color:#EBC98C; background:var(--warn-soft)}
+.note.ok{border-color:#A9D9BF; background:var(--ok-soft)}
+.note.bad{border-color:#F0C2BD; background:var(--bad-soft)}
+.types{display:grid; grid-template-columns:1fr 220px 90px; gap:8px 14px; align-items:center; max-width:680px}
+.types .h{font-size:13px; color:var(--ink-2)}
+code,.code{font-family:var(--mono); font-size:13.5px}
+.editor{background:var(--code-bg); border:1px solid var(--line); border-radius:12px; padding:14px 16px; font-family:var(--mono); font-size:13.5px; line-height:1.9; overflow-x:auto; white-space:pre; -webkit-overflow-scrolling:touch}
+.editor input{font-family:var(--mono); font-size:13px; width:130px; border:1px dashed var(--accent); background:var(--surface); border-radius:6px; padding:2px 6px}
+.editor textarea{width:100%; min-height:150px; border:0; background:transparent; font-family:var(--mono); font-size:13.5px; line-height:1.7; resize:vertical}
+.out{background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:14px 16px; font-family:var(--mono); font-size:13px; white-space:pre; overflow-x:auto; margin-top:12px}
+.stages{display:grid; gap:6px; margin-top:12px; font-size:14px}
+.stages div{display:flex; gap:8px; align-items:center; color:var(--ink-2)}
+.stages div.on{color:var(--ink); font-weight:500}
+.stages div.ok::before{content:"✓"; color:var(--ok); font-weight:700}
+.stages div.on::before{content:"•"; color:var(--accent); font-weight:700}
+.stages div.wait::before{content:"○"}
+.seg{display:inline-flex; border:1px solid var(--line); border-radius:9px; overflow:hidden}
+.seg button{border:0; background:var(--surface); padding:7px 16px; font-size:13px; min-height:36px}
+.seg button[aria-pressed="true"]{background:var(--accent-soft); color:var(--accent); font-weight:600}
+.check{list-style:none; padding:0; margin:10px 0 0; display:grid; gap:4px; font-size:14px}
+.check li::before{content:"○ "; color:#9AA9B6}
+.check li.yes::before{content:"✓ "; color:var(--ok); font-weight:700}
+.aiq{background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:18px 20px; line-height:2; max-width:72ch}
+.aiq .frag{border-radius:4px; padding:3px 2px; cursor:pointer; border-bottom:1px dashed #9AA9B6}
+.aiq .frag:hover{background:var(--accent-soft)}
+.aiq .frag.sel{background:var(--warn-soft); border-bottom:2px solid var(--warn)}
+.score{font-size:44px; font-weight:700; letter-spacing:-.02em; line-height:1.1}
+.cards3{display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin:18px 0}
+.c3{border-radius:14px; padding:14px 16px; border:1px solid var(--line); background:var(--surface)}
+.c3.g{border-top:3px solid #7CC5A0} .c3.o{border-top:3px solid #E7B866} .c3.b{border-top:3px solid #7FC4DE}
+.c3 ul{margin:6px 0 0; padding-left:18px; font-size:14px}
+.modal{position:fixed; inset:0; background:rgba(30,43,55,.35); display:grid; place-items:center; padding:20px; z-index:30}
+.modal .panel{max-width:520px; width:100%; max-height:90vh; overflow:auto}
+.sbar{display:grid; grid-template-columns:1fr 64px; gap:10px; align-items:center; font-size:14px; max-width:520px}
+.qrow{display:grid; grid-template-columns:1fr auto; gap:12px; align-items:center; padding:12px 0; border-bottom:1px solid var(--line-2)}
+.qrow:last-child{border-bottom:0}
+.hbars{display:grid; gap:10px; margin-top:14px; max-width:560px}
+.hb{display:grid; grid-template-columns:170px 1fr 52px; gap:10px; align-items:center; font-size:14px}
+.hbt{height:16px; background:var(--line-2); border-radius:4px; overflow:hidden}
+.hbt i{display:block; height:100%; background:#7FC4DE; border-radius:4px}
+@media (max-width:600px){ .hb{grid-template-columns:1fr 52px} .hb span{grid-column:1/-1} }
+.edu{font-size:13px; color:var(--ink-2); background:var(--surface); border:1px solid var(--line); border-left:3px solid var(--accent-line); border-radius:0 10px 10px 0; padding:8px 12px; margin:0 0 18px; max-width:72ch}
+.grade{display:flex; gap:10px; align-items:baseline; flex-wrap:wrap}
+.grade .lt{font-size:26px; font-weight:700; color:var(--accent)}
+.ext{display:flex; flex-direction:column; gap:10px; padding:16px}
+.ext .btn{width:100%}
+.ext ol{margin:0; padding-left:18px; font-size:14px; color:var(--ink-2)}
+.copyq{display:flex; justify-content:space-between; gap:8px; align-items:center; border:1px solid var(--line); border-radius:10px; padding:7px 10px; font-size:13px; background:var(--surface); text-align:left; width:100%}
+.copyq span:last-child{color:var(--accent); font-size:12px; white-space:nowrap}
+.form{display:grid; gap:4px; max-width:640px}
+/* ---------- tablet & mobile ---------- */
+@media (max-width:980px){
+  .player{grid-template-columns:1fr; min-height:auto}
+  .steps{display:none}
+  .mstep{display:block; position:sticky; top:calc(var(--top-h) + env(safe-area-inset-top,0px)); z-index:4; background:var(--surface); border-bottom:1px solid var(--line); padding:10px 16px}
+  .mstep .seg10{display:grid; grid-template-columns:repeat(10,1fr); gap:3px; margin-top:6px}
+  .mstep .seg10 button{height:6px; border:0; border-radius:3px; background:var(--line-2); padding:0}
+  .mstep .seg10 button.done{background:var(--accent-line)}
+  .mstep .seg10 button.cur{background:var(--accent)}
+  .stage{padding:20px 16px 110px}
+  .foot{position:fixed; left:0; right:0; bottom:0; margin:0; padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px)); background:var(--surface); border-top:1px solid var(--line); align-items:center}
+  .foot .kbd{display:none}
+  .foot > div:last-child{flex:1; display:flex; flex-direction:column; align-items:stretch}
+  .foot .btn.primary{width:100%}
+  .foot .why{text-align:center}
+  .tutor{position:fixed; left:0; right:0; bottom:0; top:auto; height:78vh; border-left:0; border-top:1px solid var(--line); border-radius:18px 18px 0 0; transform:translateY(105%); transition:transform .22s ease; z-index:25; padding-bottom:env(safe-area-inset-bottom,0px); box-shadow:0 -8px 30px rgba(30,43,55,.12)}
+  .tutor.open{transform:none}
+  .tutor header::before{content:""; display:block; width:40px; height:4px; border-radius:2px; background:var(--line); margin:0 auto 10px}
+  .backdrop.open{display:block; position:fixed; inset:0; background:rgba(30,43,55,.3); z-index:24}
+  #tclose{display:inline-block}
+  .tutor-fab{display:flex; align-items:center; gap:6px; position:fixed; right:16px; bottom:calc(84px + env(safe-area-inset-bottom,0px)); z-index:20; border-radius:24px; padding:10px 16px; background:var(--surface); color:var(--accent); border:1px solid var(--accent-line); font-weight:600; box-shadow:0 4px 16px rgba(30,43,55,.12)}
+  .home{grid-template-columns:1fr; gap:16px}
+  .nav{flex-direction:row; overflow-x:auto; gap:6px; margin:0 -20px; padding:0 20px 4px; scrollbar-width:none}
+  .nav::-webkit-scrollbar{display:none}
+  .nav button{white-space:nowrap; border:1px solid var(--line); background:var(--surface); flex:none}
+  .comps{grid-template-columns:repeat(2,1fr)}
+  .cards3{grid-template-columns:1fr}
+}
+@media (max-width:600px){
+  :root{--top-h:52px}
+  body{font-size:16px}
+  h1{font-size:24px} .stage h2{font-size:19px}
+  .top{padding:6px 12px; gap:8px}
+  .top .ver,.brand .bname{display:none}
+  .top .ctx .btn{max-width:150px; font-size:14px}
+  .top .ctx .stepof{display:none}
+  .wrap{padding:18px 16px 40px}
+  .center{margin:24px auto; padding:0 16px}
+  .panel{padding:18px; border-radius:14px}
+  input.t,textarea.t,select.t{font-size:16px}
+  .cont{padding:18px; flex-direction:column; align-items:stretch}
+  .cont .btn{width:100%}
+  .cont .bar{width:100%}
+  .case{grid-template-columns:32px 1fr; padding:12px 14px}
+  .case .tag{grid-column:2; justify-self:start}
+  .types{grid-template-columns:1fr; gap:4px; max-width:none}
+  .types .h{display:none}
+  .types > span:not(.h){margin-top:12px; font-weight:500}
+  .types label{justify-self:start}
+  .score{font-size:36px}
+  .spread > .btn:not(.ghost){width:100%}
+  .qrow{grid-template-columns:1fr}
+  .qrow .row .btn{flex:1}
+  .modal{align-items:end; padding:0}
+  .modal .panel{border-radius:18px 18px 0 0; padding-bottom:calc(18px + env(safe-area-inset-bottom,0px))}
+  .aiq{padding:14px 16px}
+  th,td{padding:8px 10px}
+}
+@media (prefers-reduced-motion: reduce){ .tutor{transition:none} }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+(function(){
+/* ---------- i18n: интерфейс RU / KZ (содержание кейсов пока на русском) ---------- */
+const T={
+ ru:{login:'Вход в AI-Biostat',code:'Код участника',otp:'Одноразовый пароль',enter:'Войти',next:'Далее',back:'Назад',home:'Главная',cases:'Мои кейсы',progress:'Мой прогресс',aicheck:'Проверка ИИ',tutor:'Репетитор',cont:'Продолжить',run:'Запустить',check:'Проверить',finish:'Завершить кейс',ask:'Спросить…',logout:'Выйти'},
+ en:{login:'Sign in to AI-Biostat',code:'Participant code',otp:'One-time password',enter:'Sign in',next:'Next',back:'Back',home:'Home',cases:'My cases',progress:'My progress',aicheck:'AI check',tutor:'AI tutor',cont:'Continue',run:'Run',check:'Check',finish:'Finish case',ask:'Ask…',logout:'Sign out'},
+ kk:{login:'AI-Biostat жүйесіне кіру',code:'Қатысушы коды',otp:'Бір реттік құпиясөз',enter:'Кіру',next:'Келесі',back:'Артқа',home:'Басты бет',cases:'Менің кейстерім',progress:'Менің прогресім',aicheck:'ЖИ тексеру',tutor:'Репетитор',cont:'Жалғастыру',run:'Іске қосу',check:'Тексеру',finish:'Кейсті аяқтау',ask:'Сұрақ қою…',logout:'Шығу'}
+};
+/* ---------- синтетические данные кейса 21 (воспроизводят опубликованные доли) ---------- */
+function rng(seed){return function(){seed=(seed*1664525+1013904223)%4294967296;return seed/4294967296}}
+const R=rng(21);
+const groups=[['Самозанятые',156,30],['Домохозяйки',70,21],['Работающие по найму',94,6]];
+let rows=[];
+groups.forEach(([g,s,ns])=>{for(let i=0;i<s;i++)rows.push({emp:g,sup:'Да'});for(let i=0;i<ns;i++)rows.push({emp:g,sup:'Нет'})});
+for(let i=rows.length-1;i>0;i--){const j=Math.floor(R()*(i+1));[rows[i],rows[j]]=[rows[j],rows[i]]}
+rows.forEach((r,i)=>{r.id=i+1;r.age=Math.round(22+R()*38);r.sex=r.emp==='Домохозяйки'?'Ж':(R()<.62?'М':'Ж');
+  r.vl=r.sup==='Да'?Math.round(R()*39):Math.round(Math.exp(4+R()*7))});
+// «грязь» для шага 2
+rows[3].age=230; rows[8].vl=-35; rows[12].sex='M (лат.)';
+const DIRTY={4:'Возраст 230 лет — опечатка (вероятно, 23)',9:'Отрицательная вирусная нагрузка — ошибка знака',13:'Пол закодирован латинской буквой — несогласованное кодирование'};
+
+/* ---------- состояние ---------- */
+const S={lang:'ru',screen:'login',role:null,level:'pre',diagIdx:0,diagAns:[],tutorOpen:false,
+ c:{step:1,maxStep:1,locked:false,flags:[],types:{},outcome:null,question:'',m:{choice:null,tries:0,ok:false,hint:false},
+    lang:'R',blanks:['',''],free:'',runs:0,ran:false,running:-1,shown:false,codeErr:'',interp:'',frag:null,fix:'',hints:0,chat:[],dispute:false,disputed:false}};
+try{const sv=localStorage.getItem('aib-lang');if(sv)S.lang=sv}catch(e){}
+const t=k=>T[S.lang][k]||T.ru[k];
+/* ---------- связь с сервером ---------- */
+async function api(m,u,b){const r=await fetch(u,{method:m,credentials:'same-origin',headers:b?{'Content-Type':'application/json'}:{},body:b?JSON.stringify(b):undefined});
+ if(!r.ok){let d='Ошибка сервера';try{d=(await r.json()).detail||d}catch(_){}const e=new Error(d);e.status=r.status;throw e}return r.json()}
+const ROLE={student:'stud',specialist:'spec',teacher:'teach'};
+const ev=(type,payload)=>api('POST','/api/events',{case_id:'21',step:S.c.step,type,payload}).catch(()=>{});
+function applyMe(me){S.me=me;S.role=ROLE[me.role];S.level=me.role==='specialist'?'post':'pre';if(me.lang&&!localStorage.getItem('aib-lang'))S.lang=me.lang}
+function applyState(st){if(!st)return;S.diagAns=st.diagAns||[];S.diagDone=!!st.diagDone;S.pct=st.pct||null;
+ if(st.cases&&st.cases['21'])Object.assign(S.c,st.cases['21'],{running:-1,dispute:false})}
+function route(){S.screen=S.role==='teach'?'teacher':(S.diagDone?'home':'diag')}
+function snapshot(){const c=Object.assign({},S.c,{running:-1,dispute:false});if(c.maxStep>=9){const sc=scores();c.score=sc.total;c.grade=gradeOf(sc.total)[1]}
+ return {diagAns:S.diagAns,diagDone:!!S.diagDone,pct:S.pct||null,cases:{'21':c}}}
+let tSave=null,lastSaved='';
+function save(){if(!S.me||S.role==='teach'||S.screen==='login')return;clearTimeout(tSave);tSave=setTimeout(()=>{const js=JSON.stringify(snapshot());if(js===lastSaved)return;
+ api('PUT','/api/state',{state:JSON.parse(js)}).then(()=>{lastSaved=js;const el=$('#savest');if(el)el.textContent='Сохранено'}).catch(e=>{const el=$('#savest');if(el)el.textContent=e.status===401?'Сессия истекла — войдите снова':'Нет связи — ответы сохранятся при восстановлении'})},600)}
+async function boot(){try{const me=await api('GET','/api/me');applyMe(me);const st=await api('GET','/api/state');applyState(st.state);route()}catch(_){S.screen='login'}render()}
+async function logout(){try{await api('POST','/api/logout')}catch(_){}location.reload()}
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+const STEPS=['Ситуация','Данные','Типы переменных','Вопрос','Выбор метода','Анализ R / Python','Интерпретация','Проверка ИИ','Дебрифинг','Завершение'];
+const VARS=[['id','Номер участника','id'],['age','Возраст, лет','q'],['sex','Пол','n'],['emp','Занятость','n'],['vl','Вирусная нагрузка, копий/мл','q'],['sup','ВН подавлена (≤40 копий)','b']];
+const TYPES={q:'Количественная',n:'Категориальная номинальная',o:'Порядковая',b:'Категориальная бинарная',id:'Идентификатор'};
+
+/* ---------- общий каркас ---------- */
+function top(extra=''){return `<header class="top"><div class="brand"><span class="mark" aria-hidden="true">AB</span><span class="bname">AI-Biostat</span></div><div class="ctx">${extra}</div><div class="grow"></div>
+ <span class="ver">Пилот</span>
+ <div class="lang" role="group" aria-label="Язык интерфейса"><button data-lang="ru" aria-pressed="${S.lang==='ru'}">RU</button><button data-lang="kk" aria-pressed="${S.lang==='kk'}">KZ</button><button data-lang="en" aria-pressed="${S.lang==='en'}">EN</button></div></header>`}
+
+function render(){setTimeout(save,0);
+ const v={login,role,diag,diagres,home,player,teacher}[S.screen]();
+ $('#app').innerHTML=v;
+ document.querySelectorAll('[data-lang]').forEach(b=>b.onclick=()=>{S.lang=b.dataset.lang;try{localStorage.setItem('aib-lang',S.lang)}catch(e){}render()});
+ bind();
+ const m=$('.msgs'); if(m) m.scrollTop=m.scrollHeight;
+}
+let binders=[];function on(sel,ev,fn){binders.push([sel,ev,fn])}
+function bind(){binders.forEach(([s,e,f])=>document.querySelectorAll(s).forEach(el=>el.addEventListener(e,f)));binders=[]}
+
+/* ---------- 1. вход ---------- */
+function login(){
+ on('#code','input',chk);on('#otp','input',chk);
+ on('#go','click',doLogin);on('#otp','keydown',e=>{if(e.key==='Enter'&&!$('#go').disabled)doLogin()});
+ return top()+`<main class="center"><div class="panel">
+ <h1>${t('login')}</h1><p class="muted">Пилотная апробация: код участника и пароль выдаёт преподаватель. Личные данные не нужны.</p>
+ <label class="f" for="code">${t('code')}</label><input class="t" id="code" placeholder="Например, P-0142" autocomplete="off">
+ <label class="f" for="otp">${t('otp')}</label><input class="t" id="otp" type="password" inputmode="numeric" maxlength="6" placeholder="6 цифр" autocomplete="current-password">
+ <div style="margin-top:20px"><button class="btn primary" id="go" disabled style="width:100%">${t('enter')}</button>
+ <div class="hint" id="why">Введите код участника и 6 цифр пароля</div></div></div>
+ <p class="small muted" style="margin-top:14px">Постоянная версия: вход через единую систему вуза (Platonus / Moodle).</p></main>`}
+async function doLogin(){const b=$('#go');b.disabled=true;$('#why').textContent='Проверяем…';
+ try{const me=await api('POST','/api/login',{code:$('#code').value,password:$('#otp').value});applyMe(me);const st=await api('GET','/api/state');applyState(st.state);route();render()}
+ catch(e){$('#why').textContent=e.message;b.disabled=false}}
+function chk(){const ok=$('#code').value.trim().length>=3&&/^\d{6}$/.test($('#otp').value);$('#go').disabled=!ok;$('#why').textContent=ok?'':'Введите код участника и 6 цифр пароля'}
+
+/* ---------- 2. роль и уровень ---------- */
+function role(){
+ on('.role','click',e=>{S.role=e.currentTarget.dataset.r;render()});
+ on('#go','click',()=>{S.level=S.role==='spec'?'post':'pre';S.screen=S.role==='teach'?'teacher':'diag';render()});
+ const r=(k,b,d)=>`<button class="role" data-r="${k}" aria-pressed="${S.role===k}"><b>${b}</b><span class="muted small">${d}</span></button>`;
+ return top()+`<main class="center" style="max-width:520px"><h1>Кто вы?</h1><p class="muted">От роли зависят задания, подсказки и формат кода.</p>
+ <div class="roles">${r('stud','Студент','Додипломный уровень · код — заполнение пропусков в шаблоне · вывод от 40 слов')}
+ ${r('spec','Специалист','Последипломный уровень · код пишется самостоятельно · вывод от 60 слов')}
+ ${r('teach','Преподаватель / автор','Проверка оценок и оспариваний, редактор кейсов, диагностика, выгрузка')}</div>
+ <div style="margin-top:20px"><button class="btn primary" id="go" ${S.role?'':'disabled'}>${t('next')}</button>${S.role?'':'<div class="hint">Выберите одну карточку</div>'}</div></main>`}
+
+/* ---------- 3. диагностика (демо: 4 из 15 вопросов) ---------- */
+const DQ=[
+ {b:'Работа с данными',q:'Стадия ВИЧ-инфекции (1, 2, 3, 4) — это какая переменная?',o:['Количественная непрерывная','Порядковая','Номинальная','Бинарная'],a:1},
+ {b:'Биостатистика',q:'Нужно сравнить долю пациентов с подавленной вирусной нагрузкой в трёх группах занятости. Какой метод подходит?',o:['t-критерий Стьюдента','Корреляция Пирсона','χ²-критерий Пирсона','Парный t-критерий'],a:2},
+ {b:'Интерпретация',q:'ОШ = 2,1; 95% ДИ 0,8–5,4. Какой вывод корректен?',o:['Связь доказана, шансы выше в 2,1 раза','Связь не доказана: ДИ включает 1','Риск выше на 110%','Нельзя ничего сказать без p-значения'],a:1},
+ {b:'Работа с ИИ',q:'ИИ пишет: «p = 0,03 означает, что гипотеза верна с вероятностью 97%». Как оценить этот ответ?',o:['Верно','Есть ошибка','Недостаточно данных'],a:1}];
+function diag(){
+ const i=S.diagIdx,q=DQ[i];
+ on('.opt','click',e=>{S.diagAns[i]=+e.currentTarget.dataset.i;render()});
+ on('#go','click',()=>{if(i<DQ.length-1){S.diagIdx++;render()}else{S.screen='diagres';render()}});
+ return top()+`<main class="center" style="max-width:620px"><div class="spread small muted"><span>Входная диагностика · ${q.b}</span><span>Вопрос ${i+1} из ${DQ.length} <span class="muted">(в полной версии 20, вариант А)</span></span></div>
+ <div class="bar" style="margin:8px 0 22px"><i style="width:${(i)/DQ.length*100}%"></i></div>
+ <h2>${q.q}</h2><div class="opts" role="radiogroup">${q.o.map((o,k)=>`<button class="opt" role="radio" data-i="${k}" aria-checked="${S.diagAns[i]===k}"><span class="dot"></span>${o}</button>`).join('')}</div>
+ <p class="small muted">Правильность не показывается — это диагностика, а не экзамен. Можно закрыть и вернуться к этому вопросу.</p>
+ <button class="btn primary" id="go" ${S.diagAns[i]==null?'disabled':''}>${i<DQ.length-1?'Ответить':'Завершить диагностику'}</button></main>`}
+function diagScores(){const by={};DQ.forEach((q,i)=>{by[q.b]=(S.diagAns[i]===q.a)?1:0});return by}
+function diagres(){
+ const sc=diagScores();
+ const pct={'Биостатистика':sc['Биостатистика']?72:41,'Работа с данными':sc['Работа с данными']?68:38,'Интерпретация':sc['Интерпретация']?64:35,'Работа с ИИ':sc['Работа с ИИ']?70:40};
+ if(!S.diagDone){S.diagDone=true;api('POST','/api/diagnostic',{variant:'A',answers:S.diagAns,pct}).catch(()=>{})}
+ S.pct=pct;const weak=Object.entries(pct).sort((a,b)=>a[1]-b[1])[0][0];
+ on('#go','click',()=>{S.screen='home';render()});
+ return top()+`<main class="center" style="max-width:620px"><h1>Ваш стартовый уровень</h1>
+ <p class="muted">Зона роста — «${weak}». Репетитор будет чаще задавать вопросы по этой теме.</p>
+ <div class="panel" style="display:grid;gap:14px">${Object.entries(pct).map(([k,v])=>`<div><div class="spread small"><span>${k}</span><b>${v}%</b></div><div class="bar"><i style="width:${v}%"></i></div></div>`).join('')}</div>
+ <div style="margin-top:20px"><button class="btn primary" id="go">Начать первый кейс</button></div></main>`}
+
+/* ---------- 4. главная ---------- */
+const PILOT=[[1,'Вспышка кори на учебной территории: оценка 7-1-7','Доли, 95% ДИ, Мак-Немар','Базовый'],[21,'ВИЧ-инфекция и занятость: подавление вирусной нагрузки','χ²-критерий','Базовый'],[23,'Пропуск приёма АРТ и вирусная супрессия','Сравнение двух долей','Базовый'],[4,'Неонатальный сепсис: случай-контроль','χ², отношение шансов','Базовый'],[22,'Стадия ВИЧ-инфекции и вирусная супрессия','Регрессия Пуассона','Сложный']];
+function home(){
+ const pct=S.pct||{'Биостатистика':60,'Работа с данными':55,'Интерпретация':50,'Работа с ИИ':58};
+ on('#cont,[data-case="21"]','click',()=>{S.screen='player';render()});
+ on('#out','click',logout);
+ const started=S.c.maxStep>1;
+ return top(`<button class="btn ghost small" id="out">${t('logout')}</button>`)+`<main class="wrap home">
+ <nav class="nav" aria-label="Разделы"><button aria-current="page">${t('home')}</button><button>${t('cases')}</button><button>Анализ данных</button><button>${t('aicheck')}</button><button>${t('progress')}</button></nav>
+ <div><h1>Здравствуйте</h1><p class="muted">${S.me?S.me.code:''} · ${S.level==='post'?'специалист':'студент'}${S.me&&S.me.group?' · группа '+S.me.group:''}</p>
+ <div class="cont"><div><div class="small muted">${started?'Вы остановились здесь':'Рекомендуемый первый кейс'}</div><h2 style="margin:4px 0">Кейс 21. ВИЧ-инфекция и занятость: подавление вирусной нагрузки</h2>
+ <div class="small muted">Шаг ${S.c.step} из 10 · ${STEPS[S.c.step-1]}</div><div class="bar" style="width:260px;margin-top:10px"><i style="width:${(S.c.maxStep-1)/10*100}%"></i></div></div>
+ <button class="btn primary" id="cont">${started?t('cont'):'Начать кейс'}</button></div>
+ <div class="comps">${Object.entries(pct).map(([k,v])=>`<div class="comp"><span class="small muted">${k}</span><b>${v}%</b><div class="bar"><i style="width:${v}%"></i></div></div>`).join('')}</div>
+ <h3>Кейсы пилота</h3><div class="cases">${PILOT.map(([n,ti,m,l])=>{const open=n===21;return `<button class="case ${open?'':'locked'}" data-case="${n}" ${open?'':'aria-disabled="true"'}><span class="n">${n}</span><span><b>${ti}</b><br><span class="small muted">${m}${open?'':' · в прототипе не наполнен'}</span></span><span class="tag">${l}</span></button>`}).join('')}</div>
+ <p class="small muted" style="margin-top:14px">Все кейсы пилота содержат только учебные данные. Остальные 25 кейсов каталога — после пилота.</p></div></main>`}
+
+/* ---------- 5. плеер кейса ---------- */
+function player(){
+ const c=S.c;
+ on('[data-step]','click',e=>{const n=+e.currentTarget.dataset.step;if(n<=c.maxStep){c.step=n;render()}});
+ on('#home','click',()=>{S.screen='home';render()});
+ on('.tutor-fab','click',()=>{S.tutorOpen=!S.tutorOpen;render()});on('.backdrop','click',()=>{S.tutorOpen=false;render()});
+ const stepList=STEPS.map((s,i)=>{const n=i+1,done=n<c.maxStep,cur=n===c.step;return `<li><button data-step="${n}" ${n>c.maxStep?'disabled':''} ${cur?'aria-current="step"':''} title="${n>c.maxStep?'Откроется после шага '+(n-1):''}"><span class="sd ${done?'done':''} ${cur?'cur':''}">${done?'✓':n}</span><span class="lbl">${s}</span></button></li>`}).join('');
+ const body=[s1,s2,s3,s4,s5,s6,s7,s8,s9,s10][c.step-1]();
+ return top(`<button class="btn ghost small" id="home">← Кейс 21. ВИЧ-инфекция и занятость</button><span class="small muted stepof">Шаг ${c.step} из 10 · <span id="savest">Сохраняется автоматически</span></span>`)+
+ `<div class="player"><nav class="steps" aria-label="Шаги кейса"><ol>${stepList}</ol>
+ ${c.locked?'<p class="small muted" style="padding:10px">Метод выбран: шаги 1–4 доступны только для просмотра.</p>':''}</nav>
+ <div class="mstep"><div class="spread small"><b>Шаг ${c.step} из 10 · ${STEPS[c.step-1]}</b>${c.locked?'<span class="muted">шаги 1–4: просмотр</span>':''}</div><div class="seg10">${STEPS.map((s,i)=>`<button data-step="${i+1}" class="${i+1<c.maxStep?'done':''} ${i+1===c.step?'cur':''}" ${i+1>c.maxStep?'disabled':''} aria-label="Шаг ${i+1}. ${s}"></button>`).join('')}</div></div>
+ <main class="stage"><div class="edu"><b>Учебные данные.</b> Данные смоделированы специально для выполнения учебного задания и не содержат реальных сведений о пациентах, медицинских организациях или территориях.</div>${body}</main>${tutorPanel()}</div><div class="backdrop ${S.tutorOpen?'open':''}"></div><button class="tutor-fab">💬 ${t('tutor')}</button>`}
+function foot(ok,why,label,fn,backFn){
+ on('#nx','click',fn); if(backFn) on('#bk','click',backFn);
+ return `<div class="foot"><div>${S.c.step>1&&S.c.step<9?`<button class="btn" id="bk">← ${t('back')}</button>`:''}</div>
+ <div><button class="btn primary" id="nx" ${ok?'':'disabled'}>${label||t('next')}</button>${!ok&&why?`<div class="why">${why}</div>`:''}<div class="kbd">Ctrl+Enter</div></div></div>`}
+function go(n){const c=S.c;ev('step_enter',{from:c.step,to:n});c.step=n;c.maxStep=Math.max(c.maxStep,n);render();window.scrollTo(0,0)}
+const back=()=>go(S.c.step-1);
+
+function s1(){return `<h2>Шаг 1. Профессиональная ситуация</h2>
+ <p>Вы — эпидемиолог центра по профилактике ВИЧ-инфекции Учебной территории. На совещании обсуждают, почему у части пациентов на АРТ вирусная нагрузка не подавлена. Руководитель просит проверить: связана ли занятость пациента с подавлением вирусной нагрузки?</p>
+ <p>В исследовании участвовали <b>377</b> пациентов на антиретровирусной терапии (АРТ). Подавленной считается вирусная нагрузка ≤40 копий/мл.</p>
+ <div class="note">Что вы будете уметь после кейса: выбирать критерий для связи двух категориальных переменных, выполнять χ²-тест в R или Python и корректно формулировать вывод без причинных утверждений.</div>
+ 
+ ${foot(true,'','К данным',()=>go(2))}`}
+
+function s2(){const c=S.c,ro=c.locked;
+ on('tr.pick','click',e=>{if(ro)return;const id=+e.currentTarget.dataset.id;c.flags=c.flags.includes(id)?c.flags.filter(x=>x!==id):[...c.flags,id];render()});
+ const found=c.flags.filter(f=>DIRTY[f]).length;
+ return `<h2>Шаг 2. Изучение данных</h2><p>Перед анализом проверьте данные. Нажмите на строки, в которых есть ошибки. <span class="muted">Показаны первые 15 строк из 377.</span></p>
+ <div class="row small" style="margin-bottom:10px"><span class="chip">case21_hiv_employment.csv</span><span class="chip">377 строк · 6 столбцов</span><span class="chip">Отмечено: ${c.flags.length}</span></div>
+ <div class="tbl"><table><thead><tr><th>id</th><th>age</th><th>sex</th><th>employment</th><th>viral_load</th><th>vl_suppressed</th></tr></thead><tbody>
+ ${rows.slice(0,15).map(r=>`<tr class="pick ${c.flags.includes(r.id)?'flag':''}" data-id="${r.id}" tabindex="0"><td class="num">${r.id}</td><td class="num">${r.age}</td><td>${esc(r.sex)}</td><td>${r.emp}</td><td class="num">${r.vl}</td><td>${r.sup}</td></tr>`).join('')}</tbody></table></div>
+ ${c.flags.length>=3?(found===3?`<div class="note ok">Все три проблемы найдены. В анализе эти значения исправлены; на итог по занятости и подавлению ВН они не влияют.</div>`:`<div class="note warn">Отмечено ${c.flags.length}, из них верных — ${found}. Посмотрите ещё раз на возраст, знак чисел и кодирование пола.</div>`):''}
+ ${foot(c.flags.length>=1,'Отметьте хотя бы одну строку с ошибкой','Далее',()=>go(3),back)}`}
+
+function s3(){const c=S.c,ro=c.locked;
+ on('select[data-v]','change',e=>{c.types[e.target.dataset.v]=e.target.value;render()});
+ on('input[name=out]','change',e=>{c.outcome=e.target.value;render()});
+ const done=VARS.filter(v=>c.types[v[0]]).length;
+ return `<h2>Шаг 3. Типы переменных</h2><p>Укажите тип каждой переменной и отметьте исход — то, что мы объясняем.</p>
+ <div class="types"><span class="h">Переменная</span><span class="h">Тип</span><span class="h">Исход</span>
+ ${VARS.map(([k,l])=>`<span><code>${k}</code> <span class="muted small">${l}</span></span>
+ <select class="t" data-v="${k}" ${ro?'disabled':''} aria-label="Тип: ${l}"><option value="">— выберите —</option>${Object.entries(TYPES).map(([tk,tl])=>`<option value="${tk}" ${c.types[k]===tk?'selected':''}>${tl}</option>`).join('')}${S.level==='post'?`<option value="other">Другое (с обоснованием)</option>`:''}</select>
+ <label class="row small"><input type="radio" name="out" value="${k}" ${c.outcome===k?'checked':''} ${ro?'disabled':''}> исход</label>`).join('')}</div>
+ <p class="small muted" style="margin-top:10px">Размечено ${done} из ${VARS.length}</p>
+ ${foot(done===VARS.length&&c.outcome,'Укажите тип всех '+VARS.length+' переменных и отметьте исход','Далее',()=>go(4),back)}`}
+
+function s4(){const c=S.c,ro=c.locked;
+ on('#q','input',e=>{c.question=e.target.value;$('#nx').disabled=c.question.trim().split(/\s+/).length<6;const w=$('.why');if(w&&!$('#nx').disabled)w.textContent=''});
+ return `<h2>Шаг 4. Исследовательский вопрос</h2><p>Сформулируйте своими словами исследовательский вопрос и гипотезу. Репетитор на этом шаге недоступен.</p>
+ <label class="f" for="q">Вопрос и гипотеза</label><textarea class="t" id="q" ${ro?'readonly':''} placeholder="Например: связана ли … с …? Гипотеза: …">${esc(c.question)}</textarea>
+ ${foot(c.question.trim().split(/\s+/).length>=6,'Напишите хотя бы одно предложение (от 6 слов)','Сохранить ответ',()=>go(5),back)}`}
+
+const METHODS=['t-критерий для независимых групп','Однофакторный дисперсионный анализ (ANOVA)','χ²-критерий Пирсона для таблицы 3×2','Корреляция Пирсона','Парный t-критерий'];
+function s5(){const m=S.c.m;
+ on('.opt','click',e=>{if(m.ok||m.tries>=2)return;m.choice=+e.currentTarget.dataset.i;m.wrong=false;render()});
+ on('#why5','input',e=>{m.why=e.target.value;const b=$('#nx');if(b&&!m.ok&&m.tries<2)b.disabled=!(m.choice!=null&&(m.why||'').trim().split(/\s+/).length>=5)});
+ const fin=m.ok||m.tries>=2;
+ const act=()=>{if(fin){S.c.locked=true;go(6);return}m.tries++;if(m.choice===2){m.ok=true}else{m.wrong=true}render()};
+ return `<h2>Шаг 5. Выбор метода</h2><p>Какой метод позволит проверить связь занятости с подавлением вирусной нагрузки?</p>
+ <div class="opts" role="radiogroup">${METHODS.map((o,k)=>`<button class="opt ${m.wrong&&m.choice===k?'wrong':''}" role="radio" data-i="${k}" aria-checked="${m.choice===k}"><span class="dot"></span>${o}</button>`).join('')}</div>
+ <label class="f" for="why5">Обоснуйте выбор (2–3 предложения)</label><textarea class="t" id="why5" style="min-height:80px" ${fin?'readonly':''}>${esc(m.why||'')}</textarea>
+ ${m.ok?`<div class="note ok">Метод выбран верно. После перехода дальше шаги 1–4 станут доступны только для просмотра.</div>`:''}
+ ${m.wrong&&m.tries===1?`<div class="note warn">Подумайте: исход «ВН подавлена» — бинарная категориальная переменная, занятость — три категории. Что сравнивают у категориальных переменных — средние или частоты? Попытка 2 из 2.</div>`:''}
+ ${m.tries>=2&&!m.ok?`<div class="note bad">Обе попытки использованы. Направление: связь двух категориальных переменных проверяют по таблице сопряжённости. Метод отмечен в дебрифинге как зона роста.</div>`:''}
+ ${foot(fin||(m.choice!=null&&(m.why||'').trim().split(/\s+/).length>=5),'Выберите метод и напишите обоснование (от 5 слов)',fin?'Далее':t('check'),act,back)}`}
+
+const TPL={R:['d <- read.csv("case21_hiv_employment.csv")','tab <- table(d$[0], d$[1])','chisq.test(tab)','prop.table(tab, 1)'],
+ Python:['import pandas as pd','from scipy.stats import chi2_contingency','d = pd.read_csv("case21_hiv_employment.csv")','tab = pd.crosstab(d["[0]"], d["[1]"])','chi2, p, dof, exp = chi2_contingency(tab, correction=False)','print(chi2, p, dof)']};
+const OUT={R:`\tPearson's Chi-squared test\n\ndata:  tab\nX-squared = 11.12, df = 2, p-value = 0.003848\n\n                      Да     Нет\nДомохозяйки          0.769  0.231\nРаботающие по найму 0.940  0.060\nСамозанятые          0.839  0.161`,
+ Python:`11.12 0.00385 2\n\nvl_suppressed             Да     Нет\nemployment\nДомохозяйки            0.769  0.231\nРаботающие по найму   0.940  0.060\nСамозанятые            0.839  0.161`};
+const RUNST=['Подготовка данных','Выполняется код','Формируется результат'];
+function s6(){const c=S.c,post=S.level==='post',phone=window.matchMedia('(max-width:600px)').matches;if(phone&&c.lang==='R'){c.lang='Python';c.ran=false}
+ on('[data-cl]','click',e=>{c.lang=e.currentTarget.dataset.cl;c.ran=false;c.codeErr='';render()});
+ on('.blank','input',e=>{c.blanks[+e.target.dataset.b]=e.target.value.trim()});
+ on('#free','input',e=>{c.free=e.target.value});
+ on('#run','click',run);
+ on('#showcode','click',()=>{c.shown=true;c.blanks=['employment','vl_suppressed'];c.codeErr='';render()});
+ on('#explain','click',()=>{S.tutorOpen=true;render()});
+ let code;
+ if(post&&!c.shown){code=`<textarea id="free" aria-label="Код" placeholder="${c.lang==='R'?'# Напишите анализ на R':'# Напишите анализ на Python'}">${esc(c.free)}</textarea>`}
+ else code=TPL[c.lang].map(l=>esc(l).replace(/\[(\d)\]/g,(m,i)=>`<input class="blank" data-b="${i}" value="${esc(c.blanks[i])}" aria-label="Пропуск ${+i+1}" ${c.shown?'readonly':''}>`)).join('\n');
+ return `<h2>Шаг 6. Анализ в R или Python</h2>
+ <div class="spread"><p style="margin:0">${post?'Напишите код анализа самостоятельно. Справка доступна у репетитора (Ctrl+K в редакторе).':'Заполните пропуски в шаблоне и запустите код.'}</p>
+ <div class="seg" role="group" aria-label="Язык"><button data-cl="R" aria-pressed="${c.lang==='R'}" ${phone?'disabled title="На телефоне доступен только Python"':''}>R</button><button data-cl="Python" aria-pressed="${c.lang==='Python'}">Python</button></div></div>
+ ${phone?'<div class="note warn">На телефоне доступен только Python. Для этого шага рекомендуем компьютер: там доступны R и Python и удобнее работать с кодом. Работа сохранится — можно продолжить с компьютера.</div>':''}
+ <div class="editor" style="margin-top:12px">${code}</div>
+ <div class="row" style="margin-top:12px"><button class="btn" id="run" ${c.running>=0?'disabled':''}>▶ ${t('run')}</button>
+ <span class="small muted">Запусков: ${c.runs}</span>${c.runs>=3&&!c.ran&&!c.shown?`<button class="btn ghost" id="showcode">Показать готовый код (−5 баллов)</button>`:''}</div>
+ ${c.running>=0?`<div class="stages">${RUNST.map((s,i)=>`<div class="${i<c.running?'ok':i===c.running?'on':'wait'}">${s}</div>`).join('')}</div>`:''}
+ ${c.codeErr?`<div class="note bad"><b>Ошибка выполнения.</b> ${c.codeErr} <button class="btn ghost" id="explain">Объяснить ошибку</button></div>`:''}
+ ${c.ran?`<div class="out">${esc(OUT[c.lang])}</div>${chart()}<p class="small muted">Второй язык (${c.lang==='R'?'Python':'R'}) откроется для сравнения после завершения кейса.</p>`:''}
+ ${foot(c.ran,'Код должен выполниться без ошибки','Далее',()=>go(7),back)}`}
+function run(){const c=S.c,post=S.level==='post';c.runs++;c.codeErr='';c.ran=false;
+ let ok;
+ if(post&&!c.shown){const s=c.free;ok=/(chisq\.test|chi2_contingency)/.test(s)&&/employment/.test(s)&&/vl_suppressed/.test(s)}
+ else{const b=c.blanks.map(x=>x.replace(/["']/g,''));ok=b.includes('employment')&&b.includes('vl_suppressed')}
+ c.running=0;render();ev('code_run',{lang:c.lang,ok});
+ const tick=()=>{c.running++;if(c.running<RUNST.length){render();setTimeout(tick,550)}else{c.running=-1;
+   if(ok)c.ran=true;else c.codeErr=c.lang==='R'?'Error in table(...): все аргументы должны иметь одинаковую длину — столбец не найден.':'KeyError: столбец не найден в таблице.';render()}};
+ setTimeout(tick,550)}
+function chart(){const d=[['Самозанятые',83.9],['Домохозяйки',76.9],['Работающие по найму',94.0]];
+ return `<div class="hbars" role="img" aria-label="Доля подавленной вирусной нагрузки по занятости">${d.map(([l,v])=>`<div class="hb"><span>${l}</span><div class="hbt"><i style="width:${v}%"></i></div><b>${v.toString().replace('.',',')}%</b></div>`).join('')}</div>`}
+
+const CHECK=[['Доли подавления по группам',/(\d{2}[,.]?\d?\s?%)|доля|процент/i],['Статистика и p-значение',/(χ|хи|chi|x-squared|11[,.]1)|p\s*[=<]/i],['Какая группа отличается и в какую сторону',/(наём|работа|домохоз|самозан)/i],['Отсутствие причинного вывода / ограничение',/(причин|огранич|не доказ|наблюдат|ассоци|связ)/i]];
+function s7(){const c=S.c,min=S.level==='post'?60:40;
+ on('#interp','input',e=>{c.interp=e.target.value;updCheck()});
+ const n=c.interp.trim()?c.interp.trim().split(/\s+/).length:0;
+ return `<h2>Шаг 7. Интерпретация</h2><p>Сформулируйте вывод своими словами. Репетитор на этом шаге не пишет вывод за вас.</p>
+ <div class="out" style="margin:0 0 12px">${esc(OUT[c.lang]).split('\n').slice(0,4).join('\n')}</div>
+ <label class="f" for="interp">Ваш вывод</label><textarea class="t" id="interp" style="min-height:160px">${esc(c.interp)}</textarea>
+ <div class="spread small"><span class="muted">Структура вывода (без готовых формулировок):</span><span id="wc">${n} / ${min} слов</span></div>
+ <ul class="check" id="chk">${CHECK.map(([l,r])=>`<li class="${r.test(c.interp)?'yes':''}">${l}</li>`).join('')}</ul>
+ ${foot(n>=min,`Нужно не меньше ${min} слов`,'Отправить вывод',()=>go(8),back)}`}
+function updCheck(){const c=S.c,min=S.level==='post'?60:40,n=c.interp.trim()?c.interp.trim().split(/\s+/).length:0;
+ $('#wc').textContent=`${n} / ${min} слов`;$('#chk').innerHTML=CHECK.map(([l,r])=>`<li class="${r.test(c.interp)?'yes':''}">${l}</li>`).join('');
+ $('#nx').disabled=n<min;const w=$('.foot .why');if(w&&n>=min)w.textContent=''}
+
+const FR=['В выборке из 377 пациентов доля подавленной вирусной нагрузки различалась по занятости: 94% у работающих по найму, 84% у самозанятых и 77% у домохозяек.','χ² = 11,1; df = 2; p = 0,004.','Следовательно, трудоустройство по найму повышает эффективность АРТ, и пациентов нужно направлять на работу.','Для уточнения стоит учесть возраст и стадию заболевания.'];
+function s8(){const c=S.c;
+ on('.frag','click',e=>{c.frag=+e.currentTarget.dataset.f;render()});
+ on('#fix','input',e=>{c.fix=e.target.value;$('#nx').disabled=!(c.frag!=null&&c.fix.trim().split(/\s+/).length>=5)});
+ return `<h2>Шаг 8. Критическая проверка ИИ</h2><p>Другой ИИ написал заключение по этим данным. Нажмите на фрагмент с ошибкой и объясните, как правильно. Репетитор на этом шаге недоступен.</p>
+ <div class="aiq">${FR.map((f,i)=>`<span class="frag ${c.frag===i?'sel':''}" data-f="${i}" tabindex="0">${f}</span> `).join('')}</div>
+ <label class="f" for="fix">Что не так и как правильно</label><textarea class="t" id="fix" style="min-height:90px">${esc(c.fix)}</textarea>
+ ${foot(c.frag!=null&&c.fix.trim().split(/\s+/).length>=5,'Выберите фрагмент и напишите исправление (от 5 слов)',t('finish'),()=>go(9),back)}`}
+
+function scores(){const c=S.c,min=S.level==='post'?60:40;
+ const f=c.flags.filter(x=>DIRTY[x]).length,wrongF=c.flags.length-f;
+ const s2=Math.max(0,Math.round(f/3*10)-wrongF*2);
+ const s3=Math.round(VARS.filter(([k,,a])=>c.types[k]===a||(a==='b'&&c.types[k]==='n')).length/VARS.length*8)+(c.outcome==='sup'?2:0);
+ const s4=c.question.trim().split(/\s+/).length>=6?5:0;
+ const s5=c.m.ok?(c.m.tries===1?20:15):0;
+ const s6=c.ran?(c.shown?10:15):0;
+ const s7=CHECK.filter(([,r])=>r.test(c.interp)).length*5+(c.interp.trim().split(/\s+/).length>=min?5:0);
+ const s8=(c.frag===2?8:0)+(/(причин|не доказ|наблюдат|ассоци|связь не означ)/i.test(c.fix)?7:0);
+ return {s2,s3,s4,s5,s6,s7,s8,total:s2+s3+s4+s5+s6+s7+s8}}
+function s9(){const c=S.c,sc=scores();
+ on('#disp','click',()=>{c.dispute=true;render()});
+ on('#dclose','click',()=>{c.dispute=false;render()});
+ on('#dsend','click',()=>{const st=$('#darg').value,tx=$('#dt').value.trim();if(!tx){$('#dt').focus();return}api('POST','/api/disputes',{case_id:'21',step:st,text:tx,ai_score:scores().total}).then(()=>{c.dispute=false;c.disputed=true;render()}).catch(e=>alert(e.message))});
+ on('#nx','click',()=>go(10));
+ const good=[],bad=[],rep=[];
+ sc.s2>=10?good.push('Найдены все ошибки в данных'):bad.push('Найдены не все ошибки в данных');
+ sc.s3>=9?good.push('Типы переменных определены верно'):(bad.push('Есть неточности в типах переменных'),rep.push('Типы переменных: бинарные и номинальные'));
+ sc.s5===20?good.push('Метод выбран с первой попытки'):sc.s5===15?(good.push('Метод выбран со второй попытки'),rep.push('Когда χ², а когда t-критерий')):(bad.push('Метод не выбран'),rep.push('Анализ таблиц сопряжённости'));
+ c.shown?bad.push('Использован готовый код'):(c.ran&&good.push('Код выполнен самостоятельно'));
+ sc.s7<25&&(bad.push('В выводе не хватает обязательных элементов'),rep.push('Структура статистического вывода'));
+ c.frag===2?good.push('Найдена ошибка ИИ: причинный вывод из наблюдательных данных'):(bad.push('Ошибка ИИ не найдена (фрагмент 3: причинный вывод)'),rep.push('Связь ≠ причинность'));
+ const L=(a)=>a.length?a.map(x=>`<li>${x}</li>`).join(''):'<li class="muted">Нет</li>';
+ return `<h2>Шаг 9. Дебрифинг</h2>
+ <div class="spread"><div><div class="score">${sc.total} <span class="muted" style="font-size:22px">/ 100</span></div>${gradeHtml(sc.total)}
+ <span class="tag">${c.disputed?'Оспаривается · оценка предварительная, переход дальше не блокируется':'Предварительная оценка · ждёт подтверждения преподавателя'}</span></div>
+ <button class="btn" id="disp" ${c.disputed?'disabled':''}>Оспорить оценку</button></div>
+ <div class="cards3"><div class="c3 g"><b>Получилось</b><ul>${L(good)}</ul></div><div class="c3 o"><b>Ошибки</b><ul>${L(bad)}</ul></div><div class="c3 b"><b>Повторить</b><ul>${L(rep)}</ul></div></div>
+ <h3>Баллы по шагам</h3><div style="display:grid;gap:6px;max-width:520px">
+ ${[['Данные',sc.s2,10],['Типы переменных',sc.s3,10],['Вопрос',sc.s4,5],['Метод',sc.s5,20],['Код',sc.s6,15],['Интерпретация',sc.s7,25],['Проверка ИИ',sc.s8,15]].map(([l,v,m])=>`<div class="sbar"><div><div class="small">${l}</div><div class="bar"><i style="width:${v/m*100}%"></i></div></div><b class="small">${v} / ${m}</b></div>`).join('')}</div>
+ <div class="note" style="margin-top:18px">Эталонный вывод: доля подавленной ВН различается по занятости (χ² = 11,1; df = 2; p = 0,004): выше у работающих по найму (94%), ниже у домохозяек (77%). Это наблюдательная связь, а не доказательство причины: занятость может отражать доход, доступ к клинике и другие факторы.</div>
+ ${c.dispute?`<div class="modal" role="dialog" aria-modal="true" aria-labelledby="dh"><div class="panel"><h2 id="dh">Оспорить оценку</h2><p class="muted small">Ваш ответ, оценка ИИ и аргументация уйдут автору исследования или назначенному преподавателю. До решения оценка имеет статус «оспаривается», но вы можете продолжать обучение. Решение и его обоснование появятся здесь.</p>
+ <label class="f" for="darg">Шаг</label><select class="t" id="darg"><option>Шаг 7. Интерпретация</option><option>Шаг 8. Проверка ИИ</option><option>Шаг 3. Типы переменных</option></select>
+ <label class="f" for="dt">Аргументация</label><textarea class="t" id="dt" placeholder="Почему вы не согласны с оценкой"></textarea>
+ <div class="row" style="margin-top:16px;justify-content:flex-end"><button class="btn" id="dclose">Отмена</button><button class="btn primary" id="dsend">Отправить преподавателю</button></div></div></div>`:''}
+ <div class="foot"><div></div><div><button class="btn primary" id="nx">Далее</button></div></div>`}
+function s10(){const sc=scores();
+ on('#h','click',()=>{S.screen='home';render()});
+ const next=sc.total>=85?'Следующий кейс (сложнее)':sc.total>=70?'Следующий кейс':'Пройти ещё раз на новых данных';
+ return `<h2>Шаг 10. Кейс завершён</h2><p>Итог: <b>${sc.total} из 100 · ${gradeOf(sc.total)[1]} (${gradeOf(sc.total)[2]})</b>, предварительно. Уведомление о решении преподавателя придёт в приложение и на e-mail.</p>
+ <div class="note">Теперь доступен код на ${S.c.lang==='R'?'Python':'R'} для сравнения:</div>
+ <div class="editor">${esc((S.c.lang==='R'?TPL.Python:TPL.R).join('\n').replace('[0]','employment').replace('[1]','vl_suppressed'))}</div>
+ <div class="row" style="margin-top:20px"><button class="btn primary" id="h">${next}</button><button class="btn" id="h2" onclick="">Скачать отчёт PDF</button></div>
+ <p class="small muted" style="margin-top:10px">В прототипе следующий кейс не наполнен — кнопка ведёт на главную.</p>`}
+
+/* ---------- репетитор: в пилоте — переход по ссылке на авторский ИИ-репетитор ---------- */
+const TUTOR_URL='https://chatgpt.com/g/g-6927183a0bb48191a49dda7e8525f334-biostatistika-p-ninen-zhi-repetitory'; // «Биостатистика пәнінен ЖИ-репетиторы»
+const QUICK={1:['Что означают цели 7-1-7?','Что значит «подавленная вирусная нагрузка»?'],2:['Какие ошибки бывают в медицинских данных?','Как отличить выброс от ошибки ввода?'],3:['Чем номинальная переменная отличается от порядковой?','Что такое исход в исследовании?'],5:['Какие допущения у χ²-критерия?','Когда нужен точный тест Фишера?'],6:['Что делает функция table() в R?','Что такое df в выводе χ²-теста?'],9:['Почему связь не означает причинность?'],10:['Как подготовиться к следующему кейсу?']};
+function tutorPanel(){const c=S.c,blocked={4:'Сначала ответьте сами — на шаге «Вопрос» репетитор не используется.',7:'Вывод вы формулируете сами. Репетитор на этом шаге не используется.',8:'Здесь вы проверяете ИИ, поэтому репетитор недоступен.'}[c.step];
+ on('#openTutor','click',()=>{c.hints++;ev('tutor_open');const el=$('#tcount');if(el)el.textContent=c.hints});
+ on('.copyq','click',e=>{const q=e.currentTarget.dataset.q;try{navigator.clipboard.writeText(q)}catch(_){}e.currentTarget.lastElementChild.textContent='Скопировано'});
+ on('#tclose','click',()=>{S.tutorOpen=false;render()});
+ return `<aside class="tutor ${S.tutorOpen?'open':''}" aria-label="ИИ-репетитор"><header><div class="spread"><b>${t('tutor')}</b><button class="btn ghost small" id="tclose" aria-label="Свернуть">✕</button></div>
+ <div class="chips"><span class="chip">Кейс 21</span><span class="chip">Шаг ${c.step}</span><span class="chip">case21_hiv_employment.csv</span></div></header>
+ ${blocked?`<div class="locked-ai">${blocked}</div>`:`<div class="ext"><p class="small" style="margin:0">В пилоте репетитор открывается в отдельной вкладке. Ваши ответы и оценки сохраняются только здесь, в AI-Biostat.</p>
+ <a class="btn primary" id="openTutor" href="${TUTOR_URL}" target="_blank" rel="noopener" style="text-align:center;text-decoration:none">Открыть ИИ-репетитор ↗</a>
+ <ol><li>Скопируйте вопрос ниже или задайте свой</li><li>Получите консультацию</li><li>Вернитесь на эту вкладку — шаг сохранён</li></ol>
+ <b class="small" style="margin-top:6px">О чём можно спросить на этом шаге</b>
+ ${(QUICK[c.step]||['Как подойти к этому шагу?']).map(q=>`<button class="copyq" data-q="${esc(q)}"><span>${q}</span><span>Копировать</span></button>`).join('')}</div>`}
+ <div class="small muted" style="padding:10px 16px 14px;margin-top:auto">Переходов к репетитору: <span id="tcount">${c.hints}</span> · учитывается в исследовании</div></aside>`}
+function gradeOf(x){const G=[[95,'A','отлично'],[90,'A−','отлично'],[85,'B+','хорошо'],[80,'B','хорошо'],[75,'B−','хорошо'],[70,'C+','хорошо'],[65,'C','удовлетворительно'],[60,'C−','удовлетворительно'],[55,'D+','удовлетворительно'],[50,'D','удовлетворительно'],[25,'FX','неудовлетворительно'],[0,'F','неудовлетворительно']];return G.find(g=>x>=g[0])}
+function gradeHtml(x){const g=gradeOf(x);return `<div class="grade"><span class="lt">${g[1]}</span><span class="muted">${g[2]}</span></div>`}
+
+/* ---------- 6. преподаватель / автор ---------- */
+const CASES_ADM=[[1,'Вспышка кори на учебной территории: оценка 7-1-7','0.1','Проверка биостатистиком'],[4,'Неонатальный сепсис: случай-контроль','0.1','Проверка биостатистиком'],[21,'ВИЧ-инфекция и занятость','0.2','Опубликован'],[22,'Стадия ВИЧ-инфекции и вирусная супрессия','0.1','Черновик'],[23,'Пропуск приёма АРТ и вирусная супрессия','0.1','Проверка эксперта по мед. образованию']];
+function teacher(){
+ S.tTab=S.tTab||'review';
+ on('[data-tt]','click',e=>{S.tTab=e.currentTarget.dataset.tt;S.edit=false;render()});
+ on('.qact','click',e=>{e.currentTarget.closest('.qrow').innerHTML='<span class="small" style="color:var(--ok)">Решение и обоснование сохранены и отправлены студенту</span>'});
+ on('#out','click',logout);
+ on('#newcase','click',()=>{S.edit=true;render()});
+ on('#cancel','click',()=>{S.edit=false;render()});
+ const nav=[['review',`Проверка${S.tData&&S.tData.disputes.length?` <span class="tag">${S.tData.disputes.length}</span>`:''}`],['editor','Редактор кейсов'],['diag','Диагностика'],['groups','Участники и выгрузка']].map(([k,l])=>`<button data-tt="${k}" ${S.tTab===k?'aria-current="page"':''}>${l}</button>`).join('');
+ let body='';
+ if(S.tTab==='review'||S.tTab==='groups'){if(!S.tData&&!S.tLoading){S.tLoading=true;api('GET','/api/teacher/overview').then(d=>{S.tData=d;S.tLoading=false;render()}).catch(e=>{S.tLoading=false;S.tData={people:[],disputes:[],err:e.message};render()})}}
+ const TD=S.tData||{people:[],disputes:[]};
+ on('[data-res]','click',e=>{const id=e.currentTarget.dataset.res,dec=e.currentTarget.dataset.dec,row=e.currentTarget.closest('.qrow'),reason=row.querySelector('textarea').value.trim(),ns=row.querySelector('input').value;
+   if(!reason){row.querySelector('textarea').focus();return}
+   api('POST','/api/teacher/disputes/'+id,{decision:dec,new_score:dec==='change'&&ns!==''?+ns:null,reason}).then(()=>{S.tData=null;render()}).catch(er=>alert(er.message))});
+ on('[data-conf]','click',e=>{const [code,cs]=e.currentTarget.dataset.conf.split('|');api('POST',`/api/teacher/confirm/${code}/${cs}`).then(()=>{S.tData=null;render()})});
+ on('#refresh','click',()=>{S.tData=null;render()});
+ const pend=TD.people.filter(p=>p.status==='completed');
+ if(S.tTab==='review') body=`<div class="spread"><h1>Проверка</h1><button class="btn" id="refresh">Обновить</button></div><p class="muted">Сначала — оспариваемые оценки. Оспаривание не блокирует студента; решение и обоснование он увидит.</p>
+ ${TD.err?`<div class="note bad">${esc(TD.err)}</div>`:''}${!S.tData?'<p class="muted">Загрузка…</p>':''}
+ <h3>Оспаривания (${TD.disputes.length})</h3><div class="panel">${TD.disputes.length?TD.disputes.map(d=>`<div class="qrow" style="grid-template-columns:1fr"><div><b>${esc(d.code)} · кейс ${esc(d.case_id)} · ${esc(d.step)}</b> <span class="tag" style="color:var(--bad)">Оспаривается</span>
+   <div class="small muted">Оценка ИИ за кейс: ${d.ai_score??'—'} · «${esc(d.text)}»</div></div>
+   <div class="row"><input class="t" type="number" min="0" max="100" placeholder="Новый балл" style="width:140px"><textarea class="t" style="min-height:44px;flex:1" placeholder="Обоснование решения (обязательно)"></textarea></div>
+   <div class="row"><button class="btn" data-res="${d.id}" data-dec="keep">Оставить оценку</button><button class="btn primary" data-res="${d.id}" data-dec="change">Изменить балл</button></div></div>`).join(''):'<p class="muted small" style="margin:0">Открытых оспариваний нет.</p>'}</div>
+ <h3 style="margin-top:22px">Ждут подтверждения (${pend.length})</h3><div class="panel">${pend.length?pend.map(p=>`<div class="qrow"><div><b>${esc(p.code)} · кейс ${esc(p.case_id)}</b> <span class="tag">Предварительная</span><div class="small muted">${p.score??'—'} баллов · ${p.grade??''}</div></div><button class="btn primary" data-conf="${esc(p.code)}|${esc(p.case_id)}">Подтвердить</button></div>`).join(''):'<p class="muted small" style="margin:0">Нет работ, ожидающих подтверждения.</p>'}</div>`;
+ if(S.tTab==='editor'&&!S.edit) body=`<div class="spread"><h1>Редактор кейсов</h1><button class="btn primary" id="newcase">Создать кейс</button></div>
+ <p class="muted">Кейс публикуется только после проверки ключа биостатистиком и содержания — экспертом по медицинскому образованию. Решение о публикации принимает автор.</p>
+ <div class="tbl"><table><thead><tr><th>№</th><th>Кейс</th><th>Версия</th><th>Статус</th></tr></thead><tbody>${CASES_ADM.map(([n,ti,v,st])=>`<tr><td>${n}</td><td>${ti}</td><td>${v}</td><td><span class="tag" style="${st==='Опубликован'?'color:var(--ok)':st==='Черновик'?'':'color:var(--warn)'}">${st}</span></td></tr>`).join('')}</tbody></table></div>`;
+ if(S.tTab==='editor'&&S.edit) body=`<h1>Новый кейс</h1><p class="muted">Черновик сохраняется автоматически. Перед отправкой на проверку можно открыть кейс глазами студента.</p>
+ <div class="panel form">
+ <label class="f">Название</label><input class="t" placeholder="Например: Пропуск приёма АРТ и вирусная супрессия">
+ <div class="row"><div style="flex:1;min-width:180px"><label class="f">Уровень</label><select class="t"><option>Базовый</option><option>Сложный</option></select></div><div style="flex:1;min-width:180px"><label class="f">Язык версии</label><select class="t"><option>Русский</option><option>Қазақша</option><option>English</option></select></div></div>
+ <label class="f">Ситуация (шаг 1)</label><textarea class="t" placeholder="Роль обучающегося и профессиональная задача"></textarea>
+ <label class="f">Учебные данные (CSV / Excel)</label><input class="t" type="file" accept=".csv,.xlsx">
+ <p class="hint">Пометка «Учебные данные» добавляется автоматически. Реальные названия территорий и организаций не используются.</p>
+ <label class="f">Словарь переменных и эталон типов (шаг 3)</label><textarea class="t" style="min-height:80px" placeholder="переменная — описание — тип — единицы"></textarea>
+ <label class="f">Ошибки в данных для шага 2</label><textarea class="t" style="min-height:70px"></textarea>
+ <label class="f">Правильный метод и дистракторы (шаг 5)</label><textarea class="t" style="min-height:70px"></textarea>
+ <label class="f">Эталонный код R и Python (шаг 6)</label><textarea class="t code" style="min-height:100px"></textarea>
+ <label class="f">Эталонный вывод и рубрика (шаг 7)</label><textarea class="t" style="min-height:80px"></textarea>
+ <label class="f">Ловушка ИИ (шаг 8)</label><textarea class="t" style="min-height:70px"></textarea>
+ <div class="row" style="margin-top:18px;justify-content:flex-end"><button class="btn" id="cancel">Отмена</button><button class="btn">Предпросмотр как студент</button><button class="btn primary">Отправить на проверку</button></div></div>`;
+ if(S.tTab==='diag') body=`<h1>Диагностика</h1><p class="muted">Два параллельных варианта по 20 заданий с одинаковой структурой: вариант А — входная, вариант Б — итоговая диагностика.</p>
+ <div class="tbl"><table><thead><tr><th>Компетенция</th><th>Вариант А</th><th>Вариант Б</th></tr></thead><tbody><tr><td>Биостатистика</td><td>6</td><td>6</td></tr><tr><td>Работа с данными</td><td>5</td><td>5</td></tr><tr><td>Интерпретация</td><td>5</td><td>5</td></tr><tr><td>Работа с ИИ</td><td>4</td><td>4</td></tr><tr><td><b>Всего</b></td><td><b>20</b></td><td><b>20</b></td></tr></tbody></table></div>
+ <p class="small muted" style="margin-top:10px">Распределение заданий по компетенциям — предварительное, утверждает автор.</p>`;
+ if(S.tTab==='groups'){const st={in_progress:'В процессе',completed:'Завершён',disputed:'Оспаривается',confirmed:'Подтверждён'};
+ body=`<div class="spread"><h1>Участники и выгрузка</h1><button class="btn" id="refresh">Обновить</button></div>
+ <div class="row" style="margin:6px 0 16px">${['attempts','events','diagnostics','disputes'].map(k=>`<a class="btn" href="/api/teacher/export/${k}.csv">${{attempts:'Результаты кейсов',events:'События (ИИ, код, шаги)',diagnostics:'Диагностика',disputes:'Оспаривания'}[k]} · CSV</a>`).join('')}</div>
+ <div class="tbl"><table><thead><tr><th>Код</th><th>Группа</th><th>Роль</th><th>Кейс</th><th>Шаг</th><th>Баллы</th><th>Статус</th><th>Переходы к ИИ</th></tr></thead><tbody>
+ ${TD.people.map(p=>`<tr><td>${esc(p.code)}</td><td>${esc(p.grp||'')}</td><td>${p.role==='specialist'?'специалист':'студент'}</td><td>${p.case_id?esc(p.case_id):'—'}</td><td>${p.max_step??'—'}</td><td>${p.score??'—'} ${p.grade?'· '+esc(p.grade):''}</td><td>${p.status?st[p.status]||p.status:'не начат'}</td><td>${p.tutor_opens||0}</td></tr>`).join('')||'<tr><td colspan="8" class="muted">Нет участников</td></tr>'}</tbody></table></div>
+ <p class="small muted" style="margin-top:10px">В выгрузках только коды участников. Таблица «код — ФИО» хранится у автора исследования отдельно.</p>`}
+ return top(`<button class="btn ghost small" id="out">${t('logout')}</button>`)+`<main class="wrap home"><nav class="nav">${nav}</nav><div>${body}</div></main>`}
+
+document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){const b=$('#nx');if(b&&!b.disabled)b.click()}
+ if((e.ctrlKey||e.metaKey)&&(e.key==='l'||e.key==='L')&&S.screen==='player'){e.preventDefault();S.tutorOpen=!S.tutorOpen;render()}});
+boot();
+})();
+</script>
+</body>
+</html>
