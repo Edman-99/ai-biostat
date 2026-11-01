@@ -26,7 +26,7 @@ export function TeacherScreen() {
     <>
       <TopBar><button className="btn ghost small" onClick={() => session.logout()}>{t('logout')}</button></TopBar>
       <main className="wrap home">
-        <nav className="nav">
+        <nav className="nav wrap-tabs">
           {tabs.map(([k, label]) => (
             <button key={k} aria-current={tab === k ? 'page' : undefined}
               onClick={() => { setTab(k); if (k === 'review' || k === 'groups') overview.reload() }}>{label}</button>

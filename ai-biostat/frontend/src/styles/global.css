@@ -64,7 +64,8 @@ textarea.t{min-height:120px; resize:vertical; line-height:1.55}
 .opt[aria-checked="true"] .dot{border:5px solid var(--accent)}
 .opt.wrong{border-color:#F0C2BD; background:var(--bad-soft)}
 /* home */
-.home{display:grid; grid-template-columns:200px 1fr; gap:28px}
+.home{display:grid; grid-template-columns:200px minmax(0,1fr); gap:28px}
+.home > *{min-width:0}
 .nav{display:flex; flex-direction:column; gap:2px}
 .nav button{text-align:left; border:0; background:transparent; padding:9px 12px; border-radius:9px; color:var(--ink); min-height:40px}
 .nav button[aria-current="page"]{background:var(--accent-soft); color:var(--accent); font-weight:600}
@@ -168,6 +169,11 @@ code,.code{font-family:var(--mono); font-size:13.5px}
 .copyq{display:flex; justify-content:space-between; gap:8px; align-items:center; border:1px solid var(--line); border-radius:10px; padding:7px 10px; font-size:13px; background:var(--surface); text-align:left; width:100%}
 .copyq span:last-child{color:var(--accent); font-size:12px; white-space:nowrap}
 .form{display:grid; gap:4px; max-width:640px}
+.exports{margin:6px 0 16px}
+.exports .btn{text-decoration:none; display:inline-flex; align-items:center; justify-content:center}
+.pcards{display:grid; gap:8px}
+.pcard{background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:12px 14px; display:grid; gap:4px}
+.pcard .meta{display:flex; flex-wrap:wrap; gap:4px 12px; font-size:13px; color:var(--ink-2)}
 /* ---------- tablet & mobile ---------- */
 @media (max-width:980px){
   .player{grid-template-columns:1fr; min-height:auto}
@@ -203,6 +209,11 @@ code,.code{font-family:var(--mono); font-size:13.5px}
   .top{padding:6px 12px; gap:8px}
   .top .ver,.brand .bname{display:none}
   .top .ctx .btn{max-width:150px; font-size:14px}
+  .top .pname{display:none}
+  .top .btn.ghost{padding:6px 4px}
+  .nav.wrap-tabs{flex-wrap:wrap; overflow:visible; margin:0; padding:0}
+  .nav.wrap-tabs button{flex:1 1 calc(50% - 6px); text-align:center; white-space:normal; line-height:1.25}
+  .exports .btn{flex:1 1 100%; text-align:center}
   .top .ctx .stepof{display:none}
   .wrap{padding:18px 16px 40px}
   .center{margin:24px auto; padding:0 16px}

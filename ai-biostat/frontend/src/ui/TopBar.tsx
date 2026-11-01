@@ -18,7 +18,7 @@ export function TopBar({ children }: { children?: ReactNode }) {
       <div className="ctx">{children}</div>
       <div className="grow" />
       {me && screen !== 'login' && (
-        <button className="btn ghost small" title="Профиль" onClick={() => app.openProfile()}>👤 {fullName(me) || me.code}</button>
+        <button className="btn ghost small" title="Профиль" onClick={() => app.openProfile()}>👤 <span className="pname">{fullName(me) || me.code}</span></button>
       )}
       <span className="ver">Пилот</span>
       <div className="lang" role="group" aria-label="Язык интерфейса">
