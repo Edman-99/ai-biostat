@@ -51,6 +51,9 @@ Claude Code читает CLAUDE.md автоматически.
   придерживаться **SOLID и ООП**. Сборка (`npm run build` в frontend/) кладёт готовые файлы в `static/`, и **они
   коммитятся в git**: сервер (t3.micro, 1 ГБ) ничего не собирает, автообновление работает как раньше.
   После любой правки фронтенда: `cd frontend && npm test && npm run build`, затем коммитить и `static/`.
+  **Версия** — поле version в frontend/package.json, видна возле логотипа (v0.3.1; при наведении — время сборки).
+  Перед каждой выкладкой поднимать: исправления — 0.3.1→0.3.2, новые возможности — 0.3.x→0.4.0.
+  Git: **никаких веток**, всё коммитить и пушить сразу в main (push = деплой).
   Структура: `core/` (HttpClient, Store), `api/` (классы AuthApi, ProgressApi, ResearchApi, DisputesApi, TeacherApi),
   `domain/` (CaseDefinition — схема кейса как данные; scoring/ — StepScorer-стратегии + CaseScorer, DebriefBuilder;
   GradeScale; code/CodeRunner — интерфейс, сейчас SimulatedCodeRunner, Pyodide/WebR будут новой реализацией;

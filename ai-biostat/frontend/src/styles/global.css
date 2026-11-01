@@ -23,6 +23,7 @@ p{margin:0 0 12px; max-width:68ch}
 .top{position:sticky; top:env(safe-area-inset-top,0px); z-index:5; display:flex; align-items:center; gap:14px; min-height:var(--top-h); padding:8px 20px; background:rgba(255,255,255,.92); backdrop-filter:blur(8px); border-bottom:1px solid var(--line)}
 .brand{font-weight:700; letter-spacing:-.01em; display:flex; align-items:center; gap:10px; white-space:nowrap}
 .mark{width:30px; height:30px; border-radius:8px; background:var(--accent-soft); color:var(--accent); border:1px solid var(--accent-line); display:grid; place-items:center; font-size:12px; font-weight:700}
+.appver{font-size:12px; font-weight:500; color:var(--ink-2); border:1px solid var(--line); border-radius:6px; padding:1px 7px; font-variant-numeric:tabular-nums}
 .top .grow{flex:1}
 .top .ctx{display:flex; align-items:center; gap:12px; min-width:0}
 .top .ctx .btn{white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:320px}
