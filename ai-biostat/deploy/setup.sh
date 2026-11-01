@@ -74,6 +74,28 @@ rm -f /opt/ai-biostat/data/_import.csv
 for f in /opt/ai-biostat/data/пароли_*.csv; do [ -f "$f" ] && { echo; echo "----- $f -----"; cat "$f"; echo; echo "Скопируйте пароли, затем удалите файл: sudo rm \"$f\""; }; done
 PT
 chmod 755 /usr/local/bin/aib-participants
+echo "==> Автообновление из GitHub (каждые 2 минуты)"
+OWNER="$(stat -c %U "$SRC")"
+REPO="$(sudo -u "$OWNER" git -C "$SRC" rev-parse --show-toplevel 2>/dev/null || true)"
+if [ -n "$REPO" ]; then
+  cat > /usr/local/bin/aib-autoupdate.new <<AU
+#!/bin/sh
+# Новый коммит в main на GitHub → обновить код и переустановить сайт. Лог: /var/log/aib-autoupdate.log
+exec 9>/run/aib-autoupdate.lock; flock -n 9 || exit 0
+cd "$REPO" || exit 0
+sudo -u $OWNER git fetch -q origin main || exit 0
+[ "\$(sudo -u $OWNER git rev-parse HEAD)" = "\$(sudo -u $OWNER git rev-parse origin/main)" ] && exit 0
+echo "==== \$(date '+%F %T') обновление до \$(sudo -u $OWNER git rev-parse --short origin/main)"
+sudo -u $OWNER git reset -q --hard origin/main
+bash "$SRC/deploy/setup.sh"
+AU
+  chmod 755 /usr/local/bin/aib-autoupdate.new
+  mv -f /usr/local/bin/aib-autoupdate.new /usr/local/bin/aib-autoupdate   # новый файл, а не перезапись работающего
+  echo "*/2 * * * * root /usr/local/bin/aib-autoupdate >> /var/log/aib-autoupdate.log 2>&1" > /etc/cron.d/aib-autoupdate
+  chmod 644 /etc/cron.d/aib-autoupdate
+else
+  echo "(папка не из git — автообновление пропущено)"
+fi
 sleep 3
 if curl -s -m 5 http://127.0.0.1:8000/api/me | grep -q "Требуется вход"; then
   echo; echo "Готово. Сайт: https://$DOMAIN"

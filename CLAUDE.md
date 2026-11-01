@@ -34,7 +34,7 @@ Claude Code читает CLAUDE.md автоматически.
 - На сервере: репо клонирован в /home/ubuntu/ai-biostat; приложение установлено в /opt/ai-biostat
   (пользователь aib, systemd-служба ai-biostat, uvicorn на 127.0.0.1:8000, Caddy спереди).
   БД: /opt/ai-biostat/data/ai_biostat.db; резервные копии ежедневно в /opt/ai-biostat/backups (14 дней).
-- Автообновление (если пользователь выполнил команду): cron /etc/cron.d/aib-autoupdate каждые 2 минуты запускает
+- Автообновление ставится самим deploy/setup.sh (с 01.11.2026; на сервере нужно один раз запустить setup.sh вручную): cron /etc/cron.d/aib-autoupdate каждые 2 минуты запускает
   /usr/local/bin/aib-autoupdate → git fetch; если есть новый коммит в main — reset --hard и
   `bash ai-biostat/deploy/setup.sh`. Лог: /var/log/aib-autoupdate.log. Т.е. **push в main = деплой через ~2 мин**.
 - Участники на сервере: `sudo aib-participants import файл.csv | reset КОД | list` (CSV: code;role;group;lang,
