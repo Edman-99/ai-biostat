@@ -44,7 +44,9 @@ Claude Code читает CLAUDE.md автоматически.
 ## Код (ai-biostat/)
 - `app/main.py` — FastAPI: /api/login, /logout, /me, PUT /profile, GET/PUT /state (весь прогресс JSON, отсюда
   таблица attempts), /events (tutor_open, code_run, step_enter), /diagnostic, /disputes, /disputes/mine,
-  /teacher/overview, /teacher/disputes/{id} (решение обязательно с обоснованием), /teacher/confirm, /teacher/export/{attempts|events|diagnostics|disputes}.csv (только коды, разделитель ;, BOM для Excel).
+  /teacher/overview, /teacher/disputes/{id} (решение обязательно с обоснованием), /teacher/confirm, /teacher/participants/import (CSV текстом в JSON, пароли возвращаются один раз),
+  /teacher/participants/{code}/reset, /teacher/export/{attempts|events|diagnostics|disputes}.csv (только коды, разделитель ;, BOM для Excel).
+- `app/participants.py` — импорт CSV и сброс пароля (общий код для API и tools/participants.py).
 - `app/db.py` — SQLite, схема + миграция колонок first_name/last_name; журнал audit.
 - `app/security.py` — pbkdf2, токены сессий (cookie aib_session, httponly; AIB_SECURE_COOKIE=1 на сервере).
 - `frontend/` — фронтенд: **React 18 + TypeScript + Vite**, i18n через react-i18next. Пользователь просил
@@ -102,7 +104,8 @@ Claude Code читает CLAUDE.md автоматически.
 
 ## Дальше (по порядку)
 1. Залить актуальную версию (профиль) и проверить сайт.
-2. Загрузка участников CSV из панели преподавателя (чтобы не заходить на сервер), сброс пароля из панели.
+2. ✅ Загрузка участников CSV и сброс пароля из панели преподавателя (v0.4.0). Участники — только коды вида
+   P-1001 + группа; ФИО в CSV не вносить (решение автора).
 3. Этап 2: реальный запуск Python (Pyodide) и R (WebR) в шаге 6, вместо имитации.
 4. Этап 3: кейсы из JSON-файлов (сейчас кейс 21 зашит в index.html), добавить кейсы 1, 4, 22, 23 и
    20 вопросов диагностики из пакетов выше; данные CSV — из пакета v0.2.

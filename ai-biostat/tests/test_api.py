@@ -61,3 +61,18 @@ def test_profile_names_visible_to_teacher_not_in_export():
     row = [p for p in t.get("/api/teacher/overview").json()["people"] if p["code"] == "P-9"][0]
     assert row["last_name"] == "Тестова"
     assert "Тестова" not in t.get("/api/teacher/export/attempts.csv").text
+
+def test_teacher_imports_participants_and_resets_password():
+    make("T-5", "teacher"); make("P-5", "student")
+    t = client("T-5")
+    csv_text = "﻿code;role;group;lang\np-1001;student;KZ-301;kk\nP-1002;specialist;SPEC-1;ru\nP-5;student;G1;kk\nP-1003;admin;G1;kk\n"
+    r = t.post("/api/teacher/participants/import", json={"csv": csv_text}).json()
+    assert [a["code"] for a in r["added"]] == ["P-1001", "P-1002"]
+    assert r["skipped"] == ["P-5"] and len(r["errors"]) == 1
+    client("P-1001", r["added"][0]["password"])               # выданный пароль работает
+    pwd = t.post("/api/teacher/participants/p-1001/reset").json()["password"]
+    client("P-1001", pwd)
+    assert t.post("/api/teacher/participants/T-5/reset").status_code == 400
+    assert t.post("/api/teacher/participants/NOPE/reset").status_code == 404
+    s = client("P-5")
+    assert s.post("/api/teacher/participants/import", json={"csv": csv_text}).status_code == 403

@@ -6,7 +6,7 @@ from fastapi import FastAPI, HTTPException, Request, Response, Depends
 from fastapi.responses import FileResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
-from . import db
+from . import db, participants
 from .security import check_password, new_token
 
 app = FastAPI(title="AI-Biostat", docs_url=None, redoc_url=None)
@@ -232,6 +232,29 @@ def confirm(code: str, case_id: str, t=Depends(teacher)):
                     (code, case_id))
         db.audit(con, t["code"], "confirm", {"code": code, "case": case_id})
     return {"ok": True}
+
+
+class ImportIn(BaseModel):
+    csv: str
+
+
+@app.post("/api/teacher/participants/import")
+def import_participants(body: ImportIn, t=Depends(teacher)):
+    """CSV code;role;group;lang из панели преподавателя. Пароли возвращаются один раз и нигде не хранятся."""
+    if len(body.csv) > 500_000:
+        raise HTTPException(400, "Файл слишком большой")
+    res = participants.import_rows(participants.parse_csv(body.csv), t["code"])
+    return {"added": res.added, "skipped": res.skipped, "errors": res.errors}
+
+
+@app.post("/api/teacher/participants/{code}/reset")
+def reset_participant(code: str, t=Depends(teacher)):
+    if code.strip().upper() == t["code"]:
+        raise HTTPException(400, "Свой пароль так сбросить нельзя")
+    pwd = participants.reset_password(code, t["code"])
+    if not pwd:
+        raise HTTPException(404, "Участник не найден")
+    return {"code": code.strip().upper(), "password": pwd}
 
 
 EXPORTS = {

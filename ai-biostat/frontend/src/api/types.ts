@@ -48,3 +48,16 @@ export interface Overview {
 }
 
 export type ExportKind = 'attempts' | 'events' | 'diagnostics' | 'disputes'
+
+export interface IssuedPassword {
+  code: string
+  password: string
+  group?: string
+  role?: ServerRole
+}
+
+export interface ImportResult {
+  added: IssuedPassword[]
+  skipped: string[]
+  errors: string[]
+}

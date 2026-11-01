@@ -1,4 +1,4 @@
-"""Управление участниками пилота.
+"""Управление участниками пилота (то же можно делать в панели преподавателя → «Участники и выгрузка»).
 
   python tools/participants.py import участники.csv     — добавить участников и выдать пароли
   python tools/participants.py reset P-0142              — выдать новый пароль одному участнику
@@ -12,14 +12,7 @@
 import csv, sys, os, time
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from app import db
-from app.security import hash_password, new_password
-
-
-def _read(path):
-    with open(path, encoding="utf-8-sig") as f:
-        sample = f.read(2048); f.seek(0)
-        delim = ";" if sample.count(";") >= sample.count(",") else ","
-        return list(csv.DictReader(f, delimiter=delim))
+from app.participants import import_rows, parse_csv, reset_password
 
 
 def _save_passwords(rows):
@@ -27,41 +20,23 @@ def _save_passwords(rows):
     with open(out, "w", encoding="utf-8-sig", newline="") as f:
         w = csv.writer(f, delimiter=";")
         w.writerow(["code", "password", "group", "role"])
-        w.writerows(rows)
+        w.writerows([[r["code"], r["password"], r["group"], r["role"]] for r in rows])
     print(f"Пароли сохранены в {out}. Раздайте их участникам и удалите файл.")
 
 
 def cmd_import(path):
-    db.init()
-    added, skipped, out = 0, 0, []
-    with db.connect() as con:
-        for r in _read(path):
-            code = (r.get("code") or "").strip().upper()
-            role = (r.get("role") or "student").strip()
-            if not code:
-                continue
-            if role not in ("student", "specialist", "teacher"):
-                print(f"Пропущен {code}: роль «{role}» не student/specialist/teacher"); continue
-            if con.execute("SELECT 1 FROM participants WHERE code=?", (code,)).fetchone():
-                skipped += 1; continue
-            pwd = new_password(); h, salt = hash_password(pwd)
-            con.execute("INSERT INTO participants(code,pwd_hash,salt,role,grp,lang,created_at) VALUES(?,?,?,?,?,?,?)",
-                        (code, h, salt, role, (r.get("group") or "").strip(), (r.get("lang") or "kk").strip(), time.time()))
-            out.append([code, pwd, r.get("group", ""), role]); added += 1
-        db.audit(con, "admin", "import", {"added": added, "skipped": skipped})
-    print(f"Добавлено: {added}, уже были: {skipped}")
-    if out:
-        _save_passwords(out)
+    with open(path, encoding="utf-8-sig") as f:
+        res = import_rows(parse_csv(f.read()), "admin")
+    for e in res.errors:
+        print("Пропущено —", e)
+    print(f"Добавлено: {len(res.added)}, уже были: {len(res.skipped)}")
+    if res.added:
+        _save_passwords(res.added)
 
 
 def cmd_reset(code):
-    code = code.strip().upper()
-    pwd = new_password(); h, salt = hash_password(pwd)
-    with db.connect() as con:
-        n = con.execute("UPDATE participants SET pwd_hash=?, salt=? WHERE code=?", (h, salt, code)).rowcount
-        con.execute("DELETE FROM sessions WHERE code=?", (code,))
-        db.audit(con, "admin", "reset", code)
-    print(f"Новый пароль для {code}: {pwd}" if n else f"Участник {code} не найден")
+    pwd = reset_password(code, "admin")
+    print(f"Новый пароль для {code.strip().upper()}: {pwd}" if pwd else f"Участник {code} не найден")
 
 
 def cmd_list():
