@@ -12,7 +12,8 @@ export interface RunRequest {
 
 export type RunResult = { ok: true; output: string } | { ok: false; error: string }
 
-export const RUN_STAGES = ['Подготовка данных', 'Выполняется код', 'Формируется результат']
+/** Этапы: подготовка данных, выполнение кода, формирование результата (подписи — step6.stages). */
+export const RUN_STAGE_COUNT = 3
 
 /**
  * Исполнитель кода шага 6. Экран зависит только от этого интерфейса,

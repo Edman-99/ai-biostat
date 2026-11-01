@@ -1,8 +1,10 @@
+import { useTranslation } from 'react-i18next'
 import { Note } from '@/ui/common'
 import { useCaseSession } from '../CaseSession'
 import { StepFooter } from '../StepFooter'
 
 export function Step2Data() {
+  const { t } = useTranslation()
   const { def, progress: c, patch, go } = useCaseSession()
   const { data } = def
   const errorCount = Object.keys(data.errors).length
@@ -15,13 +17,13 @@ export function Step2Data() {
 
   return (
     <>
-      <h2>Шаг 2. Изучение данных</h2>
-      <p>Перед анализом проверьте данные. Нажмите на строки, в которых есть ошибки.{' '}
-        <span className="muted">Показаны первые {data.preview.length} строк из {data.totalRows}.</span></p>
+      <h2>{t('step2.title')}</h2>
+      <p>{t('step2.intro')}{' '}
+        <span className="muted">{t('step2.shown', { n: data.preview.length, total: data.totalRows })}</span></p>
       <div className="row small" style={{ marginBottom: 10 }}>
         <span className="chip">{data.fileName}</span>
-        <span className="chip">{data.totalRows} строк · {data.columns.length} столбцов</span>
-        <span className="chip">Отмечено: {c.flags.length}</span>
+        <span className="chip">{t('step2.size', { rows: data.totalRows, cols: data.columns.length })}</span>
+        <span className="chip">{t('step2.marked', { n: c.flags.length })}</span>
       </div>
       <div className="tbl"><table>
         <thead><tr>{data.columns.map(col => <th key={col}>{col}</th>)}</tr></thead>
@@ -39,8 +41,8 @@ export function Step2Data() {
       </table></div>
       {c.flags.length >= errorCount && (found === errorCount
         ? <Note kind="ok">{data.allFoundNote}</Note>
-        : <Note kind="warn">Отмечено {c.flags.length}, из них верных — {found}. {data.retryHint}</Note>)}
-      <StepFooter canNext={c.flags.length >= 1} why="Отметьте хотя бы одну строку с ошибкой" onNext={() => go(3)} />
+        : <Note kind="warn">{t('step2.partial', { n: c.flags.length, found })} {data.retryHint}</Note>)}
+      <StepFooter canNext={c.flags.length >= 1} why={t('step2.why')} onNext={() => go(3)} />
     </>
   )
 }

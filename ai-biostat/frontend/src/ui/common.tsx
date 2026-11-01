@@ -1,4 +1,5 @@
 import { Fragment, type ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 import type { OverviewPerson, Dispute } from '@/api/types'
 import { fullName } from '@/core/text'
 import type { Grade } from '@/domain/grading/GradeScale'
@@ -37,7 +38,8 @@ export function Modal({ titleId, children }: { titleId: string; children: ReactN
 }
 
 export function GradeBadge({ grade }: { grade: Grade }) {
-  return <div className="grade"><span className="lt">{grade.letter}</span><span className="muted">{grade.label}</span></div>
+  const { t } = useTranslation()
+  return <div className="grade"><span className="lt">{grade.letter}</span><span className="muted">{t(`grade.${grade.labelKey}`)}</span></div>
 }
 
 /** Участник для преподавателя: «Фамилия Имя КОД» или просто код. */

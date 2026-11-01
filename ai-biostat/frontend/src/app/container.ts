@@ -18,11 +18,13 @@ import { ProgressSerializer } from './services/ProgressSerializer'
 import { ResearchTracker } from './services/ResearchTracker'
 import { LanguageService } from './services/LanguageService'
 import { SessionService } from './services/SessionService'
+import { ThemeService } from './services/ThemeService'
 
 export interface Services {
   app: AppStore
   session: SessionService
   language: LanguageService
+  theme: ThemeService
   saver: AutoSaver
   research: ResearchTracker
   disputes: DisputesApi
@@ -47,6 +49,7 @@ export function createServices(): Services {
   return {
     app,
     language,
+    theme: new ThemeService(),
     cases,
     scorer,
     grades,

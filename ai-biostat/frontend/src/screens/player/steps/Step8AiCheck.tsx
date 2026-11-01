@@ -8,8 +8,8 @@ export function Step8AiCheck() {
   const { def, progress: c, patch, go } = useCaseSession()
   return (
     <>
-      <h2>Шаг 8. Критическая проверка ИИ</h2>
-      <p>Другой ИИ написал заключение по этим данным. Нажмите на фрагмент с ошибкой и объясните, как правильно. Репетитор на этом шаге недоступен.</p>
+      <h2>{t('step8.title')}</h2>
+      <p>{t('step8.intro')}</p>
       <div className="aiq">
         {def.aiTrap.fragments.map((f, i) => (
           <span key={i}>
@@ -18,10 +18,10 @@ export function Step8AiCheck() {
           </span>
         ))}
       </div>
-      <label className="f" htmlFor="fix">Что не так и как правильно</label>
+      <label className="f" htmlFor="fix">{t('step8.label')}</label>
       <textarea className="t" id="fix" style={{ minHeight: 90 }} value={c.fix} onChange={e => patch({ fix: e.target.value })} />
-      <StepFooter canNext={c.frag != null && wordCount(c.fix) >= 5} why="Выберите фрагмент и напишите исправление (от 5 слов)"
-        label={t('finish')} onNext={() => go(9)} />
+      <StepFooter canNext={c.frag != null && wordCount(c.fix) >= 5} why={t('step8.why')}
+        label={t('step8.finish')} onNext={() => go(9)} />
     </>
   )
 }

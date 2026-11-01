@@ -1,4 +1,5 @@
 import type { ComponentType } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Step1Situation } from './steps/Step1Situation'
 import { Step2Data } from './steps/Step2Data'
 import { Step3Types } from './steps/Step3Types'
@@ -10,8 +11,10 @@ import { Step8AiCheck } from './steps/Step8AiCheck'
 import { Step9Debrief } from './steps/Step9Debrief'
 import { Step10Finish } from './steps/Step10Finish'
 
-export const STEP_NAMES = ['Ситуация', 'Данные', 'Типы переменных', 'Вопрос', 'Выбор метода', 'Анализ R / Python',
-  'Интерпретация', 'Проверка ИИ', 'Дебрифинг', 'Завершение']
+export function useStepNames(): string[] {
+  const { t } = useTranslation()
+  return t('player.steps', { returnObjects: true }) as string[]
+}
 
 export const STEP_COMPONENTS: ComponentType[] = [
   Step1Situation, Step2Data, Step3Types, Step4Question, Step5Method, Step6Code,

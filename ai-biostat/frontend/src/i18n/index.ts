@@ -15,4 +15,8 @@ void i18n.use(initReactI18next).init({
   interpolation: { escapeValue: false },
 })
 
+// атрибут lang нужен экранным дикторам и правильным переносам слов
+i18n.on('languageChanged', lng => { document.documentElement.lang = lng })
+document.documentElement.lang = i18n.language
+
 export default i18n

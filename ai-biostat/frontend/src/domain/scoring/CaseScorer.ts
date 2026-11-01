@@ -7,7 +7,6 @@ import {
 
 export interface StepScore {
   key: string
-  label: string
   value: number
   max: number
 }
@@ -32,7 +31,7 @@ export class CaseScorer {
 
   score(def: CaseDefinition, progress: CaseProgress, level: Level): ScoreSheet {
     const ctx = { def, level }
-    const steps = this.scorers.map(s => ({ key: s.key, label: s.label, max: s.max, value: s.score(progress, ctx) }))
+    const steps = this.scorers.map(s => ({ key: s.key, max: s.max, value: s.score(progress, ctx) }))
     return {
       steps,
       total: steps.reduce((sum, s) => sum + s.value, 0),

@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { useState } from 'react'
 import { useServices } from '@/app/ServicesContext'
 
@@ -5,6 +6,7 @@ type Phase = { kind: 'idle' } | { kind: 'confirm' } | { kind: 'busy' } | { kind:
 
 /** «Новый пароль» с подтверждением: старый пароль сразу перестаёт работать, участник выходит из системы. */
 export function ResetPasswordButton({ code }: { code: string }) {
+  const { t } = useTranslation()
   const { teacher } = useServices()
   const [phase, setPhase] = useState<Phase>({ kind: 'idle' })
 
@@ -18,18 +20,18 @@ export function ResetPasswordButton({ code }: { code: string }) {
     case 'confirm':
       return (
         <span className="row" style={{ gap: 6, flexWrap: 'nowrap' }}>
-          <span className="small muted">Старый пароль перестанет работать.</span>
-          <button className="btn small" style={{ minHeight: 32, padding: '4px 10px' }} onClick={reset}>Да</button>
-          <button className="btn ghost small" onClick={() => setPhase({ kind: 'idle' })}>Отмена</button>
+          <span className="small muted">{t('teacher.reset.confirm')}</span>
+          <button className="btn small" style={{ minHeight: 32, padding: '4px 10px' }} onClick={reset}>{t('common.yes')}</button>
+          <button className="btn ghost small" onClick={() => setPhase({ kind: 'idle' })}>{t('common.cancel')}</button>
         </span>
       )
     case 'busy':
-      return <span className="small muted">Выдаём…</span>
+      return <span className="small muted">{t('teacher.reset.issuing')}</span>
     case 'done':
-      return <span className="small">Новый пароль: <code style={{ fontSize: 15, fontWeight: 600 }}>{phase.password}</code></span>
+      return <span className="small">{t('teacher.reset.done')} <code style={{ fontSize: 15, fontWeight: 600 }}>{phase.password}</code></span>
     case 'error':
       return <span className="small" style={{ color: 'var(--bad)' }}>{phase.message}</span>
     default:
-      return <button className="btn ghost small" onClick={() => setPhase({ kind: 'confirm' })}>Новый пароль</button>
+      return <button className="btn ghost small" onClick={() => setPhase({ kind: 'confirm' })}>{t('teacher.reset.button')}</button>
   }
 }

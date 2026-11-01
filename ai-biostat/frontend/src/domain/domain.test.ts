@@ -80,8 +80,8 @@ describe('дебрифинг', () => {
   it('ошибка ИИ не найдена → в «Повторить»', () => {
     const p = { ...perfect(), frag: 0 }
     const d = new DebriefBuilder().build(case21, p, new CaseScorer().score(case21, p, 'pre'))
-    expect(d.bad).toContain(case21.debrief.aiMissed)
-    expect(d.repeat).toContain('Связь ≠ причинность')
+    expect(d.bad).toContainEqual({ text: case21.debrief.aiMissed })
+    expect(d.repeat).toContainEqual({ text: 'Связь ≠ причинность' })
   })
 })
 

@@ -28,9 +28,9 @@ export function StepFooter({ canNext, why, label, onNext, showBack }: Props) {
 
   return (
     <div className="foot">
-      <div>{withBack && <button className="btn" onClick={back}>← {t('back')}</button>}</div>
+      <div>{withBack && <button className="btn" onClick={back}>← {t('common.back')}</button>}</div>
       <div>
-        <button className="btn primary" disabled={!canNext} onClick={onNext}>{label || t('next')}</button>
+        <button className="btn primary" disabled={!canNext} onClick={onNext}>{label || t('common.next')}</button>
         {!canNext && why && <div className="why">{why}</div>}
         <div className="kbd">Ctrl+Enter</div>
       </div>

@@ -1,1 +1,163 @@
-{"login": "Sign in to AI-Biostat", "code": "Participant code", "otp": "Password", "enter": "Sign in", "next": "Next", "back": "Back", "home": "Home", "cases": "My cases", "progress": "My progress", "aicheck": "AI check", "tutor": "AI tutor", "cont": "Continue", "run": "Run", "check": "Check", "finish": "Finish case", "ask": "Ask…", "logout": "Sign out"}
+{
+  "common": {
+    "next": "Next", "back": "Back", "backArrow": "← Back", "cont": "Continue", "cancel": "Cancel", "save": "Save",
+    "saving": "Saving…", "saved": "Saved", "refresh": "Refresh", "loading": "Loading…", "yes": "Yes", "none": "None",
+    "logout": "Sign out", "pilot": "Pilot", "profile": "Profile", "themeDark": "Dark theme", "themeLight": "Light theme",
+    "langGroup": "Interface language", "build": "Build of {{time}}", "student": "student", "specialist": "specialist",
+    "group": "group {{group}}", "code": "code"
+  },
+  "roles": { "student": "Student", "specialist": "Specialist", "teacher": "Teacher" },
+  "login": {
+    "title": "Sign in to AI-Biostat", "intro": "Pilot study: your participant code and password are issued by the teacher. No personal data needed.",
+    "code": "Participant code", "codePh": "e.g. P-0142", "password": "Password", "passwordPh": "6 digits from the teacher or your own password",
+    "hint": "Enter your participant code and password", "checking": "Checking…", "enter": "Sign in",
+    "wrong": "Wrong participant code or password", "tooMany": "Too many attempts. Please wait 10 minutes"
+  },
+  "profile": {
+    "title": "Profile", "privacy": "Your name is visible only to you and the teacher. Research exports use the code only.",
+    "lastName": "Last name", "firstName": "First name"
+  },
+  "password": {
+    "title": "Change password", "intro": "Set a password that is easy to remember — at least 6 characters, letters and digits allowed.",
+    "current": "Current password", "new": "New password", "repeat": "Repeat new password", "submit": "Change password",
+    "enterCurrent": "Enter your current password", "tooShort": "New password must be at least 6 characters", "mismatch": "Passwords do not match",
+    "wrongCurrent": "Current password is wrong", "done": "Password changed. Use the new password next time you sign in."
+  },
+  "blocks": { "biostat": "Biostatistics", "data": "Working with data", "interp": "Interpretation", "ai": "Working with AI" },
+  "diag": {
+    "header": "Entry assessment · {{block}}", "counter": "Question {{n}} of {{total}}", "fullNote": "(20 in the full version, variant A)",
+    "note": "Correct answers are not shown — this is an assessment, not an exam. You can close it and come back to this question.",
+    "answer": "Answer", "finish": "Finish assessment",
+    "resultTitle": "Your starting level", "growth": "Area for growth — “{{weak}}”. The tutor will ask more questions on this topic.",
+    "startCase": "Start the first case"
+  },
+  "home": {
+    "nav": { "home": "Home", "cases": "My cases", "analysis": "Data analysis", "aicheck": "AI check", "progress": "My progress", "label": "Sections" },
+    "hello": "Hello", "helloName": "Hello, {{name}}",
+    "fillProfile": "Add your name in the profile so the teacher can see whose work this is.", "openProfile": "Open profile",
+    "stoppedHere": "You stopped here", "recommended": "Recommended first case", "caseTitle": "Case {{id}}. {{title}}",
+    "stepOf": "Step {{n}} of 10 · {{name}}", "startCase": "Start case", "pilotCases": "Pilot cases", "notFilled": "not filled in the prototype",
+    "footer": "All pilot cases contain training data only. The other 25 catalogue cases come after the pilot.",
+    "level": { "basic": "Basic", "advanced": "Advanced" }
+  },
+  "player": {
+    "steps": ["Situation", "Data", "Variable types", "Question", "Method", "R / Python analysis", "Interpretation", "AI check", "Debriefing", "Finish"],
+    "backToHome": "← Case {{id}}. {{title}}", "stepOf": "Step {{n}} of 10", "stepsLabel": "Case steps", "stepAria": "Step {{n}}. {{name}}",
+    "opensAfter": "Opens after step {{n}}", "lockedNote": "Method chosen: steps 1–4 are now read-only.", "lockedShort": "steps 1–4: read-only",
+    "eduTitle": "Training data.", "eduText": "The data were simulated for this training task and contain no real information about patients, healthcare organisations or territories.",
+    "save": { "idle": "Saved automatically", "saved": "Saved", "expired": "Session expired — please sign in again", "offline": "No connection — answers will be saved when it is restored" }
+  },
+  "tutor": {
+    "title": "AI tutor", "aside": "AI tutor", "collapse": "Collapse", "case": "Case {{id}}", "step": "Step {{n}}",
+    "blocked4": "Answer on your own first — the tutor is not used at the “Question” step.",
+    "blocked7": "You write the conclusion yourself. The tutor is not used at this step.",
+    "blocked8": "Here you are checking an AI, so the tutor is not available.",
+    "intro": "In the pilot the tutor opens in a separate tab. Your answers and scores are saved only here, in AI-Biostat.",
+    "open": "Open AI tutor ↗", "how1": "Copy a question below or ask your own", "how2": "Get advice", "how3": "Come back to this tab — your step is saved",
+    "askHere": "What you can ask at this step", "defaultQ": "How should I approach this step?", "copy": "Copy", "copied": "Copied",
+    "counter": "Tutor visits: {{n}} · counted in the study"
+  },
+  "step1": { "title": "Step 1. Professional situation", "toData": "To the data" },
+  "step2": {
+    "title": "Step 2. Exploring the data", "intro": "Check the data before the analysis. Click the rows that contain errors.",
+    "shown": "Showing the first {{n}} of {{total}} rows.", "size": "{{rows}} rows · {{cols}} columns", "marked": "Marked: {{n}}",
+    "partial": "Marked {{n}}, correct — {{found}}.", "why": "Mark at least one row with an error"
+  },
+  "step3": {
+    "title": "Step 3. Variable types", "intro": "Set the type of each variable and mark the outcome — what we are explaining.",
+    "variable": "Variable", "type": "Type", "outcome": "Outcome", "outcomeRadio": "outcome", "choose": "— choose —", "other": "Other (with justification)",
+    "typeAria": "Type: {{label}}", "done": "Labelled {{done}} of {{total}}", "why": "Set the type of all {{n}} variables and mark the outcome",
+    "types": { "q": "Quantitative", "n": "Categorical nominal", "o": "Ordinal", "b": "Categorical binary", "id": "Identifier" }
+  },
+  "step4": {
+    "title": "Step 4. Research question", "intro": "State the research question and hypothesis in your own words. The tutor is not available at this step.",
+    "label": "Question and hypothesis", "placeholder": "e.g. Is … associated with …? Hypothesis: …", "why": "Write at least one sentence (6+ words)", "submit": "Save answer"
+  },
+  "step5": {
+    "title": "Step 5. Choosing the method", "whyLabel": "Justify your choice (2–3 sentences)",
+    "ok": "Correct method. Once you move on, steps 1–4 become read-only.", "attempt2": "Attempt 2 of 2.",
+    "why": "Choose a method and write a justification (5+ words)", "check": "Check"
+  },
+  "step6": {
+    "title": "Step 6. Analysis in R or Python", "introPost": "Write the analysis code yourself. The tutor can help with reference.",
+    "introPre": "Fill in the blanks in the template and run the code.", "lang": "Language", "phoneOnly": "Only Python is available on a phone",
+    "phoneNote": "Only Python is available on a phone. We recommend a computer for this step: both R and Python are available there and coding is easier. Your work is saved — you can continue on a computer.",
+    "phR": "# Write your analysis in R", "phPython": "# Write your analysis in Python", "code": "Code", "blank": "Blank {{n}}",
+    "run": "Run", "runs": "Runs: {{n}}", "showCode": "Show the ready code (−5 points)",
+    "stages": ["Preparing data", "Running code", "Building the result"],
+    "error": "Execution error.", "explain": "Explain the error", "otherLang": "The other language ({{lang}}) opens for comparison after the case is finished.",
+    "why": "The code must run without errors"
+  },
+  "step7": {
+    "title": "Step 7. Interpretation", "intro": "Write the conclusion in your own words. The tutor does not write it for you at this step.",
+    "label": "Your conclusion", "structure": "Structure of the conclusion (no ready-made wording):", "words": "{{n}} / {{min}} words",
+    "why": "At least {{min}} words needed", "submit": "Submit conclusion"
+  },
+  "step8": {
+    "title": "Step 8. Critical check of AI", "intro": "Another AI wrote a conclusion from these data. Click the fragment with an error and explain what is correct. The tutor is not available at this step.",
+    "label": "What is wrong and what is correct", "why": "Choose a fragment and write a correction (5+ words)", "finish": "Finish case"
+  },
+  "step9": {
+    "title": "Step 9. Debriefing", "outOf": "/ 100",
+    "disputed": "Disputed · the score is preliminary, you can continue", "prelim": "Preliminary score · awaiting teacher confirmation",
+    "dispute": "Dispute the score", "good": "Went well", "bad": "Mistakes", "repeat": "Review", "byStep": "Points by step",
+    "dialogIntro": "Your answer, the AI score and your arguments go to the study author or an assigned teacher. Until the decision the score is “disputed”, but you can keep learning. The decision and its justification will appear here.",
+    "dialogStep": "Step", "argument": "Arguments", "argumentPh": "Why you disagree with the score", "argumentEmpty": "Write your arguments", "send": "Send to the teacher"
+  },
+  "step10": {
+    "title": "Step 10. Case completed", "result": "Result: {{total}} of 100 · {{letter}} ({{label}})", "resultNote": ", preliminary. You will be notified of the teacher's decision in the app and by e-mail.",
+    "otherCode": "The {{lang}} code is now available for comparison:", "nextHarder": "Next case (harder)", "next": "Next case",
+    "retry": "Try again with new data", "pdf": "Download PDF report", "note": "The next case is not filled in the prototype — the button goes to the home page."
+  },
+  "score": { "data": "Data", "types": "Variable types", "question": "Question", "method": "Method", "code": "Code", "interp": "Interpretation", "ai": "AI check" },
+  "grade": { "excellent": "excellent", "good": "good", "satisfactory": "satisfactory", "fail": "fail" },
+  "debrief": {
+    "dataAll": "All data errors found", "dataSome": "Not all data errors found", "typesOk": "Variable types identified correctly",
+    "typesBad": "Some variable types are inaccurate", "method1": "Method chosen on the first attempt", "method2": "Method chosen on the second attempt",
+    "methodFail": "Method not chosen", "codeShown": "Ready code was used", "codeSelf": "Code run independently",
+    "interpMissing": "The conclusion is missing required elements", "interpRepeat": "Structure of a statistical conclusion"
+  },
+  "teacher": {
+    "tabs": { "review": "Review", "editor": "Case editor", "diag": "Assessment", "groups": "Participants & export" },
+    "review": {
+      "intro": "Disputed scores first. A dispute does not block the student; they will see the decision and its justification.",
+      "disputes": "Disputes ({{n}})", "disputedTag": "Disputed", "case": "case {{id}}", "aiScore": "AI score for the case: {{score}}",
+      "newScore": "New score", "reason": "Justification (required)", "reasonRequired": "A justification is required",
+      "keep": "Keep score", "change": "Change score", "noDisputes": "No open disputes.",
+      "pending": "Awaiting confirmation ({{n}})", "prelimTag": "Preliminary", "points": "{{score}} points", "confirm": "Confirm",
+      "noPending": "No work awaiting confirmation."
+    },
+    "people": {
+      "headers": ["Participant", "Group", "Role", "Case", "Step", "Points", "Status", "Tutor visits", "Password"],
+      "status": { "in_progress": "In progress", "completed": "Completed", "disputed": "Disputed", "confirmed": "Confirmed", "none": "not started" },
+      "exports": { "attempts": "Case results", "events": "Events (AI, code, steps)", "diagnostics": "Assessment", "disputes": "Disputes" },
+      "caseStep": "case {{id}} · step {{n}}", "points": "points {{s}}", "toAi": "tutor: {{n}}", "empty": "No participants",
+      "footer": "Exports contain participant codes only. The “code — name” table is kept separately by the study author."
+    },
+    "import": {
+      "title": "Add participants",
+      "help": "A CSV file from Excel with columns code;role;group;lang, e.g. P-1001;student;KZ-301;kk. Role: student, specialist or teacher. Language: kk, ru or en. No names — codes only. Existing participants are not changed.",
+      "choose": "Choose CSV file", "uploading": "Uploading…", "added": "Added: {{n}}", "skipped": "already existed: {{n}} ({{codes}})",
+      "notAdded": "Not added:", "passwordsOnce": "Passwords are shown only now.",
+      "passwordsHelp": "Download the file and hand the passwords out. A lost password can be reissued with the “New password” button.",
+      "download": "Download passwords (CSV)", "headers": ["Code", "Password", "Group", "Role"]
+    },
+    "reset": { "button": "New password", "confirm": "The old password will stop working.", "issuing": "Issuing…", "done": "New password:" },
+    "editor": {
+      "create": "Create case", "intro": "A case is published only after the key is checked by a biostatistician and the content by a medical education expert. The author decides on publication.",
+      "headers": ["No.", "Case", "Version", "Status"], "newTitle": "New case", "newIntro": "The draft is saved automatically. Before submitting for review you can open the case as a student.",
+      "name": "Title", "namePh": "e.g. Missed ART doses and viral suppression", "level": "Level", "langVersion": "Version language",
+      "situation": "Situation (step 1)", "situationPh": "The learner's role and professional task", "dataFile": "Training data (CSV / Excel)",
+      "dataHint": "The “Training data” label is added automatically. Real names of territories and organisations are not used.",
+      "vars": "Variable dictionary and reference types (step 3)", "varsPh": "variable — description — type — units", "errors": "Data errors for step 2",
+      "method": "Correct method and distractors (step 5)", "refCode": "Reference R and Python code (step 6)", "rubric": "Reference conclusion and rubric (step 7)",
+      "trap": "AI trap (step 8)", "preview": "Preview as student", "submit": "Submit for review",
+      "status": { "published": "Published", "draft": "Draft", "biostat": "Biostatistician review", "eduExpert": "Medical education expert review" }
+    },
+    "diagTab": {
+      "intro": "Two parallel variants of 20 items with the same structure: variant A — entry, variant B — final assessment.",
+      "competence": "Competence", "variantA": "Variant A", "variantB": "Variant B", "total": "Total",
+      "note": "The distribution of items across competences is preliminary and approved by the author."
+    }
+  }
+}

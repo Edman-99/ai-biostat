@@ -18,13 +18,13 @@ export function TeacherScreen() {
   const openDisputes = overview.data?.disputes.length ?? 0
 
   const tabs: [Tab, React.ReactNode][] = [
-    ['review', <>Проверка{openDisputes > 0 && <> <span className="tag">{openDisputes}</span></>}</>],
-    ['editor', 'Редактор кейсов'], ['diag', 'Диагностика'], ['groups', 'Участники и выгрузка'],
+    ['review', <>{t('teacher.tabs.review')}{openDisputes > 0 && <> <span className="tag">{openDisputes}</span></>}</>],
+    ['editor', t('teacher.tabs.editor')], ['diag', t('teacher.tabs.diag')], ['groups', t('teacher.tabs.groups')],
   ]
 
   return (
     <>
-      <TopBar><button className="btn ghost small" onClick={() => session.logout()}>{t('logout')}</button></TopBar>
+      <TopBar><button className="btn ghost small" onClick={() => session.logout()}>{t('common.logout')}</button></TopBar>
       <main className="wrap home">
         <nav className="nav wrap-tabs">
           {tabs.map(([k, label]) => (

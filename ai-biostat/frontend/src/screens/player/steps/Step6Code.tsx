@@ -2,7 +2,6 @@ import { Fragment, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useServices } from '@/app/ServicesContext'
 import { useIsPhone } from '@/core/useMediaQuery'
-import { RUN_STAGES } from '@/domain/code/CodeRunner'
 import type { CodeLang } from '@/domain/progress/types'
 import { Note } from '@/ui/common'
 import { useCaseSession } from '../CaseSession'
@@ -14,6 +13,7 @@ const otherLang = (l: CodeLang): CodeLang => (l === 'R' ? 'Python' : 'R')
 function TemplateEditor({ lines, blanks, readOnly, onChange }: {
   lines: string[]; blanks: string[]; readOnly: boolean; onChange: (i: number, v: string) => void
 }) {
+  const { t } = useTranslation()
   return (
     <div className="editor" style={{ marginTop: 12 }}>
       {lines.map((line, li) => (
@@ -21,7 +21,7 @@ function TemplateEditor({ lines, blanks, readOnly, onChange }: {
           {line.split(/\[(\d)\]/).map((part, pi) => {
             if (pi % 2 === 0) return <Fragment key={pi}>{part}</Fragment>
             const i = Number(part)
-            return <input key={pi} className="blank" aria-label={`Пропуск ${i + 1}`} readOnly={readOnly}
+            return <input key={pi} className="blank" aria-label={t('step6.blank', { n: i + 1 })} readOnly={readOnly}
               value={blanks[i] ?? ''} onChange={e => onChange(i, e.target.value.trim())} />
           })}
           {li < lines.length - 1 && '\n'}
@@ -68,50 +68,48 @@ export function Step6Code() {
 
   return (
     <>
-      <h2>Шаг 6. Анализ в R или Python</h2>
+      <h2>{t('step6.title')}</h2>
       <div className="spread">
-        <p style={{ margin: 0 }}>{level === 'post'
-          ? 'Напишите код анализа самостоятельно. Справка доступна у репетитора (Ctrl+K в редакторе).'
-          : 'Заполните пропуски в шаблоне и запустите код.'}</p>
-        <div className="seg" role="group" aria-label="Язык">
+        <p style={{ margin: 0 }}>{level === 'post' ? t('step6.introPost') : t('step6.introPre')}</p>
+        <div className="seg" role="group" aria-label={t('step6.lang')}>
           {(['R', 'Python'] as CodeLang[]).map(l => (
             <button key={l} aria-pressed={c.lang === l} disabled={l === 'R' && phone}
-              title={l === 'R' && phone ? 'На телефоне доступен только Python' : undefined}
+              title={l === 'R' && phone ? t('step6.phoneOnly') : undefined}
               onClick={() => patch({ lang: l, ran: false, codeErr: '' })}>{l}</button>
           ))}
         </div>
       </div>
-      {phone && <Note kind="warn">На телефоне доступен только Python. Для этого шага рекомендуем компьютер: там доступны R и Python и удобнее работать с кодом. Работа сохранится — можно продолжить с компьютера.</Note>}
+      {phone && <Note kind="warn">{t('step6.phoneNote')}</Note>}
 
       {freeMode
         ? <div className="editor" style={{ marginTop: 12 }}>
-            <textarea aria-label="Код" value={c.free} onChange={e => patch({ free: e.target.value })}
-              placeholder={c.lang === 'R' ? '# Напишите анализ на R' : '# Напишите анализ на Python'} />
+            <textarea aria-label={t('step6.code')} value={c.free} onChange={e => patch({ free: e.target.value })}
+              placeholder={c.lang === 'R' ? t('step6.phR') : t('step6.phPython')} />
           </div>
         : <TemplateEditor lines={def.code.templates[c.lang]} blanks={c.blanks} readOnly={c.shown}
             onChange={(i, v) => patch(p => { const b = [...p.blanks]; b[i] = v; return { blanks: b } })} />}
 
       <div className="row" style={{ marginTop: 12 }}>
-        <button className="btn" disabled={running >= 0} onClick={run}>▶ {t('run')}</button>
-        <span className="small muted">Запусков: {c.runs}</span>
-        {c.runs >= 3 && !c.ran && !c.shown && <button className="btn ghost" onClick={showCode}>Показать готовый код (−5 баллов)</button>}
+        <button className="btn" disabled={running >= 0} onClick={run}>▶ {t('step6.run')}</button>
+        <span className="small muted">{t('step6.runs', { n: c.runs })}</span>
+        {c.runs >= 3 && !c.ran && !c.shown && <button className="btn ghost" onClick={showCode}>{t('step6.showCode')}</button>}
       </div>
       {running >= 0 && (
         <div className="stages">
-          {RUN_STAGES.map((s, i) => <div key={s} className={i < running ? 'ok' : i === running ? 'on' : 'wait'}>{s}</div>)}
+          {(t('step6.stages', { returnObjects: true }) as string[]).map((s, i) => <div key={s} className={i < running ? 'ok' : i === running ? 'on' : 'wait'}>{s}</div>)}
         </div>
       )}
       {c.codeErr && (
-        <Note kind="bad"><b>Ошибка выполнения.</b> {c.codeErr} <button className="btn ghost" onClick={openTutor}>Объяснить ошибку</button></Note>
+        <Note kind="bad"><b>{t('step6.error')}</b> {c.codeErr} <button className="btn ghost" onClick={openTutor}>{t('step6.explain')}</button></Note>
       )}
       {c.ran && (
         <>
           <div className="out">{def.code.outputs[c.lang]}</div>
           <ResultChart {...def.code.chart} />
-          <p className="small muted">Второй язык ({otherLang(c.lang)}) откроется для сравнения после завершения кейса.</p>
+          <p className="small muted">{t('step6.otherLang', { lang: otherLang(c.lang) })}</p>
         </>
       )}
-      <StepFooter canNext={c.ran} why="Код должен выполниться без ошибки" onNext={() => go(7)} />
+      <StepFooter canNext={c.ran} why={t('step6.why')} onNext={() => go(7)} />
     </>
   )
 }
