@@ -51,3 +51,13 @@ def test_export_has_codes_only():
     t = client("T-3")
     r = t.get("/api/teacher/export/attempts.csv")
     assert r.status_code == 200 and "code;case_id" in r.text
+
+def test_profile_names_visible_to_teacher_not_in_export():
+    make("P-9", "student"); make("T-9", "teacher")
+    s, t = client("P-9"), client("T-9")
+    r = s.put("/api/profile", json={"first_name": "Айгерим", "last_name": "Тестова"})
+    assert r.status_code == 200 and r.json()["last_name"] == "Тестова"
+    assert s.get("/api/me").json()["first_name"] == "Айгерим"
+    row = [p for p in t.get("/api/teacher/overview").json()["people"] if p["code"] == "P-9"][0]
+    assert row["last_name"] == "Тестова"
+    assert "Тестова" not in t.get("/api/teacher/export/attempts.csv").text

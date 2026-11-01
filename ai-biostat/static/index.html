@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>AI-Biostat — предварительный флоу</title>
+<title>AI-Biostat</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>
@@ -270,6 +270,8 @@ const t=k=>T[S.lang][k]||T.ru[k];
 async function api(m,u,b){const r=await fetch(u,{method:m,credentials:'same-origin',headers:b?{'Content-Type':'application/json'}:{},body:b?JSON.stringify(b):undefined});
  if(!r.ok){let d='Ошибка сервера';try{d=(await r.json()).detail||d}catch(_){}const e=new Error(d);e.status=r.status;throw e}return r.json()}
 const ROLE={student:'stud',specialist:'spec',teacher:'teach'};
+const fullName=u=>u?[u.last_name,u.first_name].filter(Boolean).join(' '):'';
+const who=p=>esc(fullName(p)||'')+(fullName(p)?` <span class="muted small">${esc(p.code)}</span>`:esc(p.code));
 const ev=(type,payload)=>api('POST','/api/events',{case_id:'21',step:S.c.step,type,payload}).catch(()=>{});
 function applyMe(me){S.me=me;S.role=ROLE[me.role];S.level=me.role==='specialist'?'post':'pre';if(me.lang&&!localStorage.getItem('aib-lang'))S.lang=me.lang}
 function applyState(st){if(!st)return;S.diagAns=st.diagAns||[];S.diagDone=!!st.diagDone;S.pct=st.pct||null;
@@ -291,12 +293,14 @@ const TYPES={q:'Количественная',n:'Категориальная н
 
 /* ---------- общий каркас ---------- */
 function top(extra=''){return `<header class="top"><div class="brand"><span class="mark" aria-hidden="true">AB</span><span class="bname">AI-Biostat</span></div><div class="ctx">${extra}</div><div class="grow"></div>
+ ${S.me&&S.screen!=='login'?`<button class="btn ghost small" id="prof" title="Профиль">👤 ${esc(fullName(S.me)||S.me.code)}</button>`:''}
  <span class="ver">Пилот</span>
  <div class="lang" role="group" aria-label="Язык интерфейса"><button data-lang="ru" aria-pressed="${S.lang==='ru'}">RU</button><button data-lang="kk" aria-pressed="${S.lang==='kk'}">KZ</button><button data-lang="en" aria-pressed="${S.lang==='en'}">EN</button></div></header>`}
 
 function render(){setTimeout(save,0);
- const v={login,role,diag,diagres,home,player,teacher}[S.screen]();
+ const v={login,role,diag,diagres,home,player,teacher,profile}[S.screen]();
  $('#app').innerHTML=v;
+ const pb=$('#prof');if(pb)pb.onclick=()=>{S.prevScreen=S.screen==='profile'?S.prevScreen:S.screen;S.screen='profile';render()};
  document.querySelectorAll('[data-lang]').forEach(b=>b.onclick=()=>{S.lang=b.dataset.lang;try{localStorage.setItem('aib-lang',S.lang)}catch(e){}render()});
  bind();
  const m=$('.msgs'); if(m) m.scrollTop=m.scrollHeight;
@@ -314,11 +318,26 @@ function login(){
  <label class="f" for="otp">${t('otp')}</label><input class="t" id="otp" type="password" inputmode="numeric" maxlength="6" placeholder="6 цифр" autocomplete="current-password">
  <div style="margin-top:20px"><button class="btn primary" id="go" disabled style="width:100%">${t('enter')}</button>
  <div class="hint" id="why">Введите код участника и 6 цифр пароля</div></div></div>
- <p class="small muted" style="margin-top:14px">Постоянная версия: вход через единую систему вуза (Platonus / Moodle).</p></main>`}
+</main>`}
 async function doLogin(){const b=$('#go');b.disabled=true;$('#why').textContent='Проверяем…';
  try{const me=await api('POST','/api/login',{code:$('#code').value,password:$('#otp').value});applyMe(me);const st=await api('GET','/api/state');applyState(st.state);route();render()}
  catch(e){$('#why').textContent=e.message;b.disabled=false}}
 function chk(){const ok=$('#code').value.trim().length>=3&&/^\d{6}$/.test($('#otp').value);$('#go').disabled=!ok;$('#why').textContent=ok?'':'Введите код участника и 6 цифр пароля'}
+
+/* ---------- профиль ---------- */
+function profile(){
+ on('#psave','click',async()=>{const b=$('#psave');b.disabled=true;$('#pmsg').textContent='Сохраняем…';
+   try{S.me=await api('PUT','/api/profile',{first_name:$('#pfn').value,last_name:$('#pln').value});$('#pmsg').textContent='Сохранено';S.tData=null;setTimeout(()=>{S.screen=S.prevScreen||'home';render()},500)}
+   catch(e){$('#pmsg').textContent=e.message;b.disabled=false}});
+ on('#pback','click',()=>{S.screen=S.prevScreen||'home';render()});
+ const roleName={student:'Студент',specialist:'Специалист',teacher:'Преподаватель'}[S.me.role];
+ return top()+`<main class="center"><div class="panel"><h1>Профиль</h1>
+ <p class="muted">${roleName} · код <b>${esc(S.me.code)}</b>${S.me.group?' · группа '+esc(S.me.group):''}</p>
+ <p class="small muted">Имя и фамилия видны только вам и преподавателю. В выгрузках для исследования используется только код.</p>
+ <label class="f" for="pln">Фамилия</label><input class="t" id="pln" value="${esc(S.me.last_name||'')}" autocomplete="family-name">
+ <label class="f" for="pfn">Имя</label><input class="t" id="pfn" value="${esc(S.me.first_name||'')}" autocomplete="given-name">
+ <div class="row" style="margin-top:20px"><button class="btn" id="pback">← Назад</button><button class="btn primary" id="psave">Сохранить</button></div>
+ <div class="hint" id="pmsg"></div></div></main>`}
 
 /* ---------- 2. роль и уровень ---------- */
 function role(){
@@ -362,12 +381,13 @@ function diagres(){
 const PILOT=[[1,'Вспышка кори на учебной территории: оценка 7-1-7','Доли, 95% ДИ, Мак-Немар','Базовый'],[21,'ВИЧ-инфекция и занятость: подавление вирусной нагрузки','χ²-критерий','Базовый'],[23,'Пропуск приёма АРТ и вирусная супрессия','Сравнение двух долей','Базовый'],[4,'Неонатальный сепсис: случай-контроль','χ², отношение шансов','Базовый'],[22,'Стадия ВИЧ-инфекции и вирусная супрессия','Регрессия Пуассона','Сложный']];
 function home(){
  const pct=S.pct||{'Биостатистика':60,'Работа с данными':55,'Интерпретация':50,'Работа с ИИ':58};
+ on('#goprof','click',()=>{S.prevScreen='home';S.screen='profile';render()});
  on('#cont,[data-case="21"]','click',()=>{S.screen='player';render()});
  on('#out','click',logout);
  const started=S.c.maxStep>1;
  return top(`<button class="btn ghost small" id="out">${t('logout')}</button>`)+`<main class="wrap home">
  <nav class="nav" aria-label="Разделы"><button aria-current="page">${t('home')}</button><button>${t('cases')}</button><button>Анализ данных</button><button>${t('aicheck')}</button><button>${t('progress')}</button></nav>
- <div><h1>Здравствуйте</h1><p class="muted">${S.me?S.me.code:''} · ${S.level==='post'?'специалист':'студент'}${S.me&&S.me.group?' · группа '+S.me.group:''}</p>
+ <div><h1>Здравствуйте${S.me&&S.me.first_name?', '+esc(S.me.first_name):''}</h1>${S.me&&!S.me.first_name?`<div class="note">Укажите имя и фамилию в профиле, чтобы преподаватель видел, чья это работа. <button class="btn ghost" id="goprof">Открыть профиль</button></div>`:''}<p class="muted">${S.me?S.me.code:''} · ${S.level==='post'?'специалист':'студент'}${S.me&&S.me.group?' · группа '+S.me.group:''}</p>
  <div class="cont"><div><div class="small muted">${started?'Вы остановились здесь':'Рекомендуемый первый кейс'}</div><h2 style="margin:4px 0">Кейс 21. ВИЧ-инфекция и занятость: подавление вирусной нагрузки</h2>
  <div class="small muted">Шаг ${S.c.step} из 10 · ${STEPS[S.c.step-1]}</div><div class="bar" style="width:260px;margin-top:10px"><i style="width:${(S.c.maxStep-1)/10*100}%"></i></div></div>
  <button class="btn primary" id="cont">${started?t('cont'):'Начать кейс'}</button></div>
@@ -588,11 +608,11 @@ function teacher(){
  const pend=TD.people.filter(p=>p.status==='completed');
  if(S.tTab==='review') body=`<div class="spread"><h1>Проверка</h1><button class="btn" id="refresh">Обновить</button></div><p class="muted">Сначала — оспариваемые оценки. Оспаривание не блокирует студента; решение и обоснование он увидит.</p>
  ${TD.err?`<div class="note bad">${esc(TD.err)}</div>`:''}${!S.tData?'<p class="muted">Загрузка…</p>':''}
- <h3>Оспаривания (${TD.disputes.length})</h3><div class="panel">${TD.disputes.length?TD.disputes.map(d=>`<div class="qrow" style="grid-template-columns:1fr"><div><b>${esc(d.code)} · кейс ${esc(d.case_id)} · ${esc(d.step)}</b> <span class="tag" style="color:var(--bad)">Оспаривается</span>
+ <h3>Оспаривания (${TD.disputes.length})</h3><div class="panel">${TD.disputes.length?TD.disputes.map(d=>`<div class="qrow" style="grid-template-columns:1fr"><div><b>${who(d)} · кейс ${esc(d.case_id)} · ${esc(d.step)}</b> <span class="tag" style="color:var(--bad)">Оспаривается</span>
    <div class="small muted">Оценка ИИ за кейс: ${d.ai_score??'—'} · «${esc(d.text)}»</div></div>
    <div class="row"><input class="t" type="number" min="0" max="100" placeholder="Новый балл" style="width:140px"><textarea class="t" style="min-height:44px;flex:1" placeholder="Обоснование решения (обязательно)"></textarea></div>
    <div class="row"><button class="btn" data-res="${d.id}" data-dec="keep">Оставить оценку</button><button class="btn primary" data-res="${d.id}" data-dec="change">Изменить балл</button></div></div>`).join(''):'<p class="muted small" style="margin:0">Открытых оспариваний нет.</p>'}</div>
- <h3 style="margin-top:22px">Ждут подтверждения (${pend.length})</h3><div class="panel">${pend.length?pend.map(p=>`<div class="qrow"><div><b>${esc(p.code)} · кейс ${esc(p.case_id)}</b> <span class="tag">Предварительная</span><div class="small muted">${p.score??'—'} баллов · ${p.grade??''}</div></div><button class="btn primary" data-conf="${esc(p.code)}|${esc(p.case_id)}">Подтвердить</button></div>`).join(''):'<p class="muted small" style="margin:0">Нет работ, ожидающих подтверждения.</p>'}</div>`;
+ <h3 style="margin-top:22px">Ждут подтверждения (${pend.length})</h3><div class="panel">${pend.length?pend.map(p=>`<div class="qrow"><div><b>${who(p)} · кейс ${esc(p.case_id)}</b> <span class="tag">Предварительная</span><div class="small muted">${p.score??'—'} баллов · ${p.grade??''}</div></div><button class="btn primary" data-conf="${esc(p.code)}|${esc(p.case_id)}">Подтвердить</button></div>`).join(''):'<p class="muted small" style="margin:0">Нет работ, ожидающих подтверждения.</p>'}</div>`;
  if(S.tTab==='editor'&&!S.edit) body=`<div class="spread"><h1>Редактор кейсов</h1><button class="btn primary" id="newcase">Создать кейс</button></div>
  <p class="muted">Кейс публикуется только после проверки ключа биостатистиком и содержания — экспертом по медицинскому образованию. Решение о публикации принимает автор.</p>
  <div class="tbl"><table><thead><tr><th>№</th><th>Кейс</th><th>Версия</th><th>Статус</th></tr></thead><tbody>${CASES_ADM.map(([n,ti,v,st])=>`<tr><td>${n}</td><td>${ti}</td><td>${v}</td><td><span class="tag" style="${st==='Опубликован'?'color:var(--ok)':st==='Черновик'?'':'color:var(--warn)'}">${st}</span></td></tr>`).join('')}</tbody></table></div>`;
@@ -616,8 +636,8 @@ function teacher(){
  if(S.tTab==='groups'){const st={in_progress:'В процессе',completed:'Завершён',disputed:'Оспаривается',confirmed:'Подтверждён'};
  body=`<div class="spread"><h1>Участники и выгрузка</h1><button class="btn" id="refresh">Обновить</button></div>
  <div class="row" style="margin:6px 0 16px">${['attempts','events','diagnostics','disputes'].map(k=>`<a class="btn" href="/api/teacher/export/${k}.csv">${{attempts:'Результаты кейсов',events:'События (ИИ, код, шаги)',diagnostics:'Диагностика',disputes:'Оспаривания'}[k]} · CSV</a>`).join('')}</div>
- <div class="tbl"><table><thead><tr><th>Код</th><th>Группа</th><th>Роль</th><th>Кейс</th><th>Шаг</th><th>Баллы</th><th>Статус</th><th>Переходы к ИИ</th></tr></thead><tbody>
- ${TD.people.map(p=>`<tr><td>${esc(p.code)}</td><td>${esc(p.grp||'')}</td><td>${p.role==='specialist'?'специалист':'студент'}</td><td>${p.case_id?esc(p.case_id):'—'}</td><td>${p.max_step??'—'}</td><td>${p.score??'—'} ${p.grade?'· '+esc(p.grade):''}</td><td>${p.status?st[p.status]||p.status:'не начат'}</td><td>${p.tutor_opens||0}</td></tr>`).join('')||'<tr><td colspan="8" class="muted">Нет участников</td></tr>'}</tbody></table></div>
+ <div class="tbl"><table><thead><tr><th>Участник</th><th>Группа</th><th>Роль</th><th>Кейс</th><th>Шаг</th><th>Баллы</th><th>Статус</th><th>Переходы к ИИ</th></tr></thead><tbody>
+ ${TD.people.map(p=>`<tr><td>${who(p)}</td><td>${esc(p.grp||'')}</td><td>${p.role==='specialist'?'специалист':'студент'}</td><td>${p.case_id?esc(p.case_id):'—'}</td><td>${p.max_step??'—'}</td><td>${p.score??'—'} ${p.grade?'· '+esc(p.grade):''}</td><td>${p.status?st[p.status]||p.status:'не начат'}</td><td>${p.tutor_opens||0}</td></tr>`).join('')||'<tr><td colspan="8" class="muted">Нет участников</td></tr>'}</tbody></table></div>
  <p class="small muted" style="margin-top:10px">В выгрузках только коды участников. Таблица «код — ФИО» хранится у автора исследования отдельно.</p>`}
  return top(`<button class="btn ghost small" id="out">${t('logout')}</button>`)+`<main class="wrap home"><nav class="nav">${nav}</nav><div>${body}</div></main>`}
 

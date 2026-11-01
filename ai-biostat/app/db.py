@@ -37,6 +37,10 @@ def connect():
 def init():
     with connect() as con:
         con.executescript(SCHEMA)
+        cols = {r["name"] for r in con.execute("PRAGMA table_info(participants)")}
+        for col in ("first_name", "last_name"):          # профиль (добавлено позже — миграция)
+            if col not in cols:
+                con.execute(f"ALTER TABLE participants ADD COLUMN {col} TEXT")
 
 
 def audit(con, actor, action, detail=""):

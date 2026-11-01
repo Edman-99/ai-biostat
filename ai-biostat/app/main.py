@@ -58,7 +58,7 @@ def login(body: Login, response: Response):
         con.execute("INSERT INTO sessions VALUES(?,?,?)", (token, code, time.time()))
         db.audit(con, code, "login")
     response.set_cookie(COOKIE, token, httponly=True, samesite="lax", secure=SECURE_COOKIE, max_age=60 * 60 * 24 * 30)
-    return {"code": code, "role": p["role"], "group": p["grp"], "lang": p["lang"]}
+    return _me(dict(p))
 
 
 @app.post("/api/logout")
@@ -71,9 +71,29 @@ def logout(request: Request, response: Response):
     return {"ok": True}
 
 
+def _me(u):
+    return {"code": u["code"], "role": u["role"], "group": u["grp"], "lang": u["lang"],
+            "first_name": u.get("first_name") or "", "last_name": u.get("last_name") or ""}
+
+
 @app.get("/api/me")
 def me(user=Depends(current)):
-    return {"code": user["code"], "role": user["role"], "group": user["grp"], "lang": user["lang"]}
+    return _me(user)
+
+
+class Profile(BaseModel):
+    first_name: str
+    last_name: str
+
+
+@app.put("/api/profile")
+def profile(body: Profile, user=Depends(current)):
+    fn, ln = body.first_name.strip()[:60], body.last_name.strip()[:60]
+    with db.connect() as con:
+        con.execute("UPDATE participants SET first_name=?, last_name=? WHERE code=?", (fn, ln, user["code"]))
+        db.audit(con, user["code"], "profile")
+    user.update(first_name=fn, last_name=ln)
+    return _me(user)
 
 
 # ---------- сохранение прогресса ----------
@@ -172,12 +192,13 @@ def my_disputes(user=Depends(current)):
 @app.get("/api/teacher/overview")
 def overview(t=Depends(teacher)):
     with db.connect() as con:
-        people = con.execute("""SELECT p.code, p.role, p.grp, a.case_id, a.step, a.max_step, a.score, a.grade,
+        people = con.execute("""SELECT p.code, p.first_name, p.last_name, p.role, p.grp, a.case_id, a.step, a.max_step, a.score, a.grade,
             a.status, a.updated_at,
             (SELECT COUNT(*) FROM events e WHERE e.code=p.code AND e.type='tutor_open') AS tutor_opens
             FROM participants p LEFT JOIN attempts a ON a.code=p.code
             WHERE p.role!='teacher' ORDER BY p.grp, p.code""").fetchall()
-        disputes = con.execute("SELECT * FROM disputes WHERE status='open' ORDER BY created_at").fetchall()
+        disputes = con.execute("SELECT d.*, p.first_name, p.last_name FROM disputes d LEFT JOIN participants p "
+                               "ON p.code=d.code WHERE d.status='open' ORDER BY d.created_at").fetchall()
     return {"people": [dict(r) for r in people], "disputes": [dict(r) for r in disputes]}
 
 
