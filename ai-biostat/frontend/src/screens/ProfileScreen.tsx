@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useAppState, useServices } from '@/app/ServicesContext'
 import { TopBar } from '@/ui/TopBar'
+import { ChangePasswordForm } from './ChangePasswordForm'
 
 const ROLE_NAME = { student: 'Студент', specialist: 'Специалист', teacher: 'Преподаватель' }
 
@@ -37,7 +38,9 @@ export function ProfileScreen() {
           <button className="btn primary" disabled={busy} onClick={save}>Сохранить</button>
         </div>
         <div className="hint">{msg}</div>
-      </div></main>
+      </div>
+      <ChangePasswordForm />
+      </main>
     </>
   )
 }

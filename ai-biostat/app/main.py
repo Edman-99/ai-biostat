@@ -7,7 +7,7 @@ from fastapi.responses import FileResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from . import db, participants
-from .security import check_password, new_token
+from .security import check_password, hash_password, new_token
 
 app = FastAPI(title="AI-Biostat", docs_url=None, redoc_url=None)
 STATIC = os.path.join(os.path.dirname(__file__), "..", "static")
@@ -94,6 +94,27 @@ def profile(body: Profile, user=Depends(current)):
         db.audit(con, user["code"], "profile")
     user.update(first_name=fn, last_name=ln)
     return _me(user)
+
+
+class PasswordChange(BaseModel):
+    old_password: str
+    new_password: str
+
+
+@app.put("/api/password")
+def change_password(body: PasswordChange, request: Request, user=Depends(current)):
+    """Свой пароль вместо выданного. Остальные сессии участника закрываются, текущая остаётся."""
+    old, new = body.old_password.strip(), body.new_password.strip()
+    if not check_password(old, user["pwd_hash"], user["salt"]):
+        raise HTTPException(400, "Текущий пароль неверный")
+    if len(new) < 6 or len(new) > 64:
+        raise HTTPException(400, "Новый пароль — от 6 до 64 символов")
+    h, salt = hash_password(new)
+    with db.connect() as con:
+        con.execute("UPDATE participants SET pwd_hash=?, salt=? WHERE code=?", (h, salt, user["code"]))
+        con.execute("DELETE FROM sessions WHERE code=? AND token!=?", (user["code"], request.cookies.get(COOKIE)))
+        db.audit(con, user["code"], "password_change")
+    return {"ok": True}
 
 
 # ---------- сохранение прогресса ----------

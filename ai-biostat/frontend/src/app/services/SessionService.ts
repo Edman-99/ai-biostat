@@ -37,4 +37,8 @@ export class SessionService {
   async updateProfile(firstName: string, lastName: string): Promise<void> {
     this.app.setMe(await this.auth.updateProfile(firstName, lastName))
   }
+
+  async changePassword(oldPassword: string, newPassword: string): Promise<void> {
+    await this.auth.changePassword(oldPassword, newPassword)
+  }
 }

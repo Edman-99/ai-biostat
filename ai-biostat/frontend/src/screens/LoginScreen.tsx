@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { useServices } from '@/app/ServicesContext'
 import { TopBar } from '@/ui/TopBar'
 
-const HINT = 'Введите код участника и 6 цифр пароля'
+const HINT = 'Введите код участника и пароль'
 
 export function LoginScreen() {
   const { session } = useServices()
@@ -12,7 +12,7 @@ export function LoginScreen() {
   const [pwd, setPwd] = useState('')
   const [busy, setBusy] = useState(false)
   const [msg, setMsg] = useState(HINT)
-  const valid = code.trim().length >= 3 && /^\d{6}$/.test(pwd)
+  const valid = code.trim().length >= 3 && pwd.trim().length >= 6
 
   const submit = async () => {
     if (!valid || busy) return
@@ -31,7 +31,7 @@ export function LoginScreen() {
         <input className="t" id="code" placeholder="Например, P-0142" autoComplete="off" value={code}
           onChange={e => { setCode(e.target.value); setMsg(HINT) }} />
         <label className="f" htmlFor="otp">{t('otp')}</label>
-        <input className="t" id="otp" type="password" inputMode="numeric" maxLength={6} placeholder="6 цифр"
+        <input className="t" id="otp" type="password" placeholder="6 цифр от преподавателя или ваш пароль"
           autoComplete="current-password" value={pwd}
           onChange={e => { setPwd(e.target.value); setMsg(HINT) }}
           onKeyDown={e => { if (e.key === 'Enter') void submit() }} />

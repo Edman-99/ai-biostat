@@ -76,3 +76,14 @@ def test_teacher_imports_participants_and_resets_password():
     assert t.post("/api/teacher/participants/NOPE/reset").status_code == 404
     s = client("P-5")
     assert s.post("/api/teacher/participants/import", json={"csv": csv_text}).status_code == 403
+
+def test_change_own_password():
+    make("T-7", "teacher")
+    t, other = client("T-7"), client("T-7")
+    assert t.put("/api/password", json={"old_password": "000000", "new_password": "Biostat2026"}).status_code == 400
+    assert t.put("/api/password", json={"old_password": "123456", "new_password": "123"}).status_code == 400
+    assert t.put("/api/password", json={"old_password": "123456", "new_password": "Biostat2026"}).status_code == 200
+    assert t.get("/api/me").status_code == 200                 # текущая сессия жива
+    assert other.get("/api/me").status_code == 401             # другие закрыты
+    client("T-7", "Biostat2026")
+    assert TestClient(main.app).post("/api/login", json={"code": "T-7", "password": "123456"}).status_code == 401

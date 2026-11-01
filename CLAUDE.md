@@ -38,11 +38,12 @@ Claude Code читает CLAUDE.md автоматически.
   /usr/local/bin/aib-autoupdate → git fetch; если есть новый коммит в main — reset --hard и
   `bash ai-biostat/deploy/setup.sh`. Лог: /var/log/aib-autoupdate.log. Т.е. **push в main = деплой через ~2 мин**.
 - Участники на сервере: `sudo aib-participants import файл.csv | reset КОД | list` (CSV: code;role;group;lang,
-  role = student|specialist|teacher). Пароли — 6 цифр, печатаются на экран.
+  role = student|specialist|teacher). Пароли — 6 цифр, печатаются на экран; в профиле можно сменить на свой (v0.5.0).
+  Почту для сброса пароля НЕ делаем (решение: личные данные + нет домена для писем); студентам сбрасывает преподаватель.
   Тестовый набор: T-0001 (teacher), S-0001 (specialist, SPEC-1), P-0001…P-0015 (student, KZ-301, lang kk).
 
 ## Код (ai-biostat/)
-- `app/main.py` — FastAPI: /api/login, /logout, /me, PUT /profile, GET/PUT /state (весь прогресс JSON, отсюда
+- `app/main.py` — FastAPI: /api/login, /logout, /me, PUT /profile, PUT /password (свой пароль, от 6 символов), GET/PUT /state (весь прогресс JSON, отсюда
   таблица attempts), /events (tutor_open, code_run, step_enter), /diagnostic, /disputes, /disputes/mine,
   /teacher/overview, /teacher/disputes/{id} (решение обязательно с обоснованием), /teacher/confirm, /teacher/participants/import (CSV текстом в JSON, пароли возвращаются один раз),
   /teacher/participants/{code}/reset, /teacher/export/{attempts|events|diagnostics|disputes}.csv (только коды, разделитель ;, BOM для Excel).

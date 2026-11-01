@@ -10,4 +10,7 @@ export class AuthApi {
   updateProfile(first_name: string, last_name: string) {
     return this.http.put<User>('/api/profile', { first_name, last_name })
   }
+  changePassword(old_password: string, new_password: string) {
+    return this.http.put<{ ok: boolean }>('/api/password', { old_password, new_password })
+  }
 }
