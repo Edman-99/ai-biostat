@@ -54,6 +54,28 @@ def import_rows(rows: list[dict], actor: str) -> ImportResult:
     return res
 
 
+PREFIX = {"student": "P", "specialist": "S", "teacher": "T"}
+FIRST_NUMBER = 1001
+MAX_GROUP = 100
+
+
+def next_codes(role: str, count: int) -> list[str]:
+    """Следующие свободные коды: студенты P-1001, P-1002…, специалисты S-…, преподаватели T-…"""
+    prefix = PREFIX[role]
+    with db.connect() as con:
+        taken = [r["code"] for r in con.execute("SELECT code FROM participants WHERE code LIKE ?", (f"{prefix}-%",))]
+    nums = [int(c.split("-", 1)[1]) for c in taken if c.split("-", 1)[1].isdigit()]
+    start = max([FIRST_NUMBER - 1, *nums]) + 1
+    return [f"{prefix}-{n:04d}" for n in range(start, start + count)]
+
+
+def create_group(group: str, count: int, role: str, lang: str, actor: str) -> ImportResult:
+    """Группа целиком: коды выдаются автоматически, пароли возвращаются один раз."""
+    db.init()
+    rows = [{"code": c, "role": role, "group": group, "lang": lang} for c in next_codes(role, count)]
+    return import_rows(rows, actor)
+
+
 def reset_password(code: str, actor: str) -> str | None:
     """Новый пароль; все открытые сессии участника закрываются. None — участник не найден."""
     code = code.strip().upper()

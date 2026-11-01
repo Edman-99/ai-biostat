@@ -196,6 +196,25 @@ code,.code{font-family:var(--mono); font-size:13.5px}
 .exports{margin:6px 0 16px}
 .exports .btn{text-decoration:none; display:inline-flex; align-items:center; justify-content:center}
 .pcards{display:grid; gap:8px}
+.group-form{display:flex; flex-wrap:wrap; gap:4px 18px; align-items:flex-end}
+.group-form > div{flex:0 0 auto}
+.group-form .g-name{width:220px}
+.group-form .g-count{width:120px}
+.csv-import summary{cursor:pointer; color:var(--accent); font-weight:500}
+.print-area{display:none}
+/* Печать карточек: на бумаге только карточки, всегда чёрным по белому */
+@media print{
+  body *{visibility:hidden}
+  .print-area, .print-area *{visibility:visible}
+  .print-area{display:grid !important; position:absolute; left:0; top:0; width:100%; grid-template-columns:1fr 1fr; gap:0; color:#000; background:#fff}
+  .print-card{border:1px dashed #888; padding:14px 16px; break-inside:avoid; font-size:13px; line-height:1.5}
+  .pc-brand{font-weight:700; font-size:15px; margin-bottom:6px}
+  .pc-row{display:flex; justify-content:space-between; gap:10px}
+  .pc-row span{color:#555}
+  .pc-big{font-family:var(--mono); font-size:18px; letter-spacing:.04em}
+  .pc-note{margin-top:6px; font-size:11px; color:#555}
+  @page{margin:12mm}
+}
 .pcard{background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:12px 14px; display:grid; gap:4px}
 .pcard .meta{display:flex; flex-wrap:wrap; gap:4px 12px; font-size:13px; color:var(--ink-2)}
 /* ---------- tablet & mobile ---------- */
@@ -238,6 +257,8 @@ code,.code{font-family:var(--mono); font-size:13.5px}
   .nav.wrap-tabs{flex-wrap:wrap; overflow:visible; margin:0; padding:0}
   .nav.wrap-tabs button{flex:1 1 calc(50% - 6px); text-align:center; white-space:normal; line-height:1.25}
   .exports .btn{flex:1 1 100%; text-align:center}
+  .group-form > div, .group-form .g-name{width:100%}
+  .group-form .g-count{width:120px}
   .top .ctx .stepof{display:none}
   .wrap{padding:18px 16px 40px}
   .center{margin:24px auto; padding:0 16px}

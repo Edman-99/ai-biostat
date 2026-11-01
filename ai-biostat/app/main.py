@@ -278,6 +278,27 @@ def reset_participant(code: str, t=Depends(teacher)):
     return {"code": code.strip().upper(), "password": pwd}
 
 
+class GroupIn(BaseModel):
+    group: str
+    count: int
+    role: str = "student"
+    lang: str = "kk"
+
+
+@app.post("/api/teacher/participants/group")
+def create_group(body: GroupIn, t=Depends(teacher)):
+    """«Создать группу»: коды P-1001… выдаются автоматически, пароли возвращаются один раз."""
+    group = body.group.strip()
+    if not group or len(group) > 30:
+        raise HTTPException(400, "Укажите название группы (до 30 символов)")
+    if not 1 <= body.count <= participants.MAX_GROUP:
+        raise HTTPException(400, f"Количество — от 1 до {participants.MAX_GROUP}")
+    if body.role not in ("student", "specialist") or body.lang not in participants.LANGS:
+        raise HTTPException(400, "Неверная роль или язык")
+    res = participants.create_group(group, body.count, body.role, body.lang, t["code"])
+    return {"added": res.added, "skipped": res.skipped, "errors": res.errors}
+
+
 EXPORTS = {
     "attempts": "SELECT code, case_id, step, max_step, score, grade, status, started_at, updated_at, completed_at FROM attempts",
     "events": "SELECT code, case_id, step, type, payload, ts FROM events",

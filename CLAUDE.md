@@ -47,7 +47,8 @@ Claude Code читает CLAUDE.md автоматически.
 - `app/main.py` — FastAPI: /api/login, /logout, /me, PUT /profile, PUT /password (свой пароль, от 6 символов), GET/PUT /state (весь прогресс JSON, отсюда
   таблица attempts), /events (tutor_open, code_run, step_enter), /diagnostic, /disputes, /disputes/mine,
   /teacher/overview, /teacher/disputes/{id} (решение обязательно с обоснованием), /teacher/confirm, /teacher/participants/import (CSV текстом в JSON, пароли возвращаются один раз),
-  /teacher/participants/{code}/reset, /teacher/export/{attempts|events|diagnostics|disputes}.csv (только коды, разделитель ;, BOM для Excel).
+  /teacher/participants/group («Создать группу»: коды P-1001…/S-… автоматически), /teacher/participants/{code}/reset,
+  /teacher/export/{attempts|events|diagnostics|disputes}.csv (только коды, разделитель ;, BOM для Excel).
 - `app/participants.py` — импорт CSV и сброс пароля (общий код для API и tools/participants.py).
 - `app/db.py` — SQLite, схема + миграция колонок first_name/last_name; журнал audit.
 - `app/security.py` — pbkdf2, токены сессий (cookie aib_session, httponly; AIB_SECURE_COOKIE=1 на сервере).

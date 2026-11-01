@@ -1,5 +1,5 @@
 import type { HttpClient } from '@/core/http/HttpClient'
-import type { ExportKind, ImportResult, IssuedPassword, Overview } from './types'
+import type { ExportKind, ImportResult, IssuedPassword, Lang, Overview } from './types'
 
 export class TeacherApi {
   constructor(private http: HttpClient) {}
@@ -17,6 +17,10 @@ export class TeacherApi {
 
   importParticipants(csv: string) {
     return this.http.post<ImportResult>('/api/teacher/participants/import', { csv })
+  }
+
+  createGroup(group: string, count: number, role: 'student' | 'specialist', lang: Lang) {
+    return this.http.post<ImportResult>('/api/teacher/participants/group', { group, count, role, lang })
   }
 
   resetPassword(code: string) {

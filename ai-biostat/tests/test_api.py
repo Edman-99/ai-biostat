@@ -87,3 +87,17 @@ def test_change_own_password():
     assert other.get("/api/me").status_code == 401             # другие закрыты
     client("T-7", "Biostat2026")
     assert TestClient(main.app).post("/api/login", json={"code": "T-7", "password": "123456"}).status_code == 401
+
+def test_teacher_creates_group_with_auto_codes():
+    make("T-8", "teacher"); make("P-1500", "student")
+    t = client("T-8")
+    r = t.post("/api/teacher/participants/group", json={"group": "KZ-302", "count": 3, "role": "student", "lang": "kk"}).json()
+    codes = [a["code"] for a in r["added"]]
+    assert codes == ["P-1501", "P-1502", "P-1503"]               # после самого большого занятого номера
+    assert all(a["group"] == "KZ-302" and len(a["password"]) == 6 for a in r["added"])
+    client("P-1502", r["added"][1]["password"])
+    s = t.post("/api/teacher/participants/group", json={"group": "SPEC-2", "count": 1, "role": "specialist", "lang": "ru"}).json()
+    assert s["added"][0]["code"].startswith("S-")
+    assert t.post("/api/teacher/participants/group", json={"group": "", "count": 3}).status_code == 400
+    assert t.post("/api/teacher/participants/group", json={"group": "X", "count": 500}).status_code == 400
+    assert t.post("/api/teacher/participants/group", json={"group": "X", "count": 1, "role": "teacher"}).status_code == 400

@@ -3,6 +3,7 @@ import { useServices } from '@/app/ServicesContext'
 import type { ExportKind, OverviewPerson } from '@/api/types'
 import { useIsPhone } from '@/core/useMediaQuery'
 import { Note, Who } from '@/ui/common'
+import { CreateGroup } from './CreateGroup'
 import { ImportParticipants } from './ImportParticipants'
 import { ResetPasswordButton } from './ResetPasswordButton'
 import type { OverviewState } from './useOverview'
@@ -67,6 +68,7 @@ export function ParticipantsTab({ overview }: { overview: OverviewState }) {
   return (
     <>
       <div className="spread"><h1>{t('teacher.tabs.groups')}</h1><button className="btn" onClick={reload}>{t('common.refresh')}</button></div>
+      <CreateGroup onCreated={reload} />
       <ImportParticipants onImported={reload} />
       <div className="row exports">
         {EXPORTS.map(k => <a key={k} className="btn" href={teacher.exportUrl(k)}>{t(`teacher.people.exports.${k}`)} · CSV</a>)}
