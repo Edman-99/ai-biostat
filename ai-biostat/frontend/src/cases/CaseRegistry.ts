@@ -1,6 +1,10 @@
 import type { CaseDefinition } from '@/domain/cases/CaseDefinition'
 import type { Localized } from '@/core/localized'
+import { buildCase01 } from './case01/case01'
+import { buildCase04 } from './case04/case04'
 import { buildCase21 } from './case21/case21'
+import { buildCase22 } from './case22/case22'
+import { buildCase23 } from './case23/case23'
 import type { Lang } from '@/api/types'
 
 export type CaseLevel = 'basic' | 'advanced'
@@ -77,4 +81,10 @@ export class CaseRegistry {
   ids(): string[] { return [...this.sources.keys()] }
 }
 
-export const defaultCaseRegistry = () => new CaseRegistry([{ id: '21', build: buildCase21 }])
+export const defaultCaseRegistry = () => new CaseRegistry([
+  { id: '1', build: buildCase01 },
+  { id: '4', build: buildCase04 },
+  { id: '21', build: buildCase21 },
+  { id: '22', build: buildCase22 },
+  { id: '23', build: buildCase23 },
+])

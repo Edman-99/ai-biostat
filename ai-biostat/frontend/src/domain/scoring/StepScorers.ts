@@ -32,7 +32,8 @@ export class VariableTypesScorer implements StepScorer {
   score(p: CaseProgress, { def }: ScoringContext) {
     const vars = def.variables
     const right = vars.filter(v => p.types[v.key] === v.expected || v.accepted?.includes(p.types[v.key] as never)).length
-    return Math.round(right / vars.length * 8) + (p.outcome === def.outcome ? 2 : 0)
+    const outcomeOk = p.outcome === def.outcome || (!!p.outcome && !!def.outcomeAlso?.includes(p.outcome))
+    return Math.round(right / vars.length * 8) + (outcomeOk ? 2 : 0)
   }
 }
 

@@ -47,6 +47,8 @@ export interface CaseDefinition {
 
   variables: CaseVariable[]
   outcome: string
+  /** другие переменные, которые тоже засчитываются как исход (кейс с двумя равноправными исходами) */
+  outcomeAlso?: string[]
 
   method: {
     question: string
