@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next'
 import { useServices } from '@/app/ServicesContext'
 import { Note } from '@/ui/common'
 import { useCaseSession } from '../CaseSession'
+import { CaseReport, printCaseReport } from '../CaseReport'
 
 export function Step10Finish() {
   const { t } = useTranslation()
@@ -20,10 +21,11 @@ export function Step10Finish() {
       <Note>{t('step10.otherCode', { lang: other })}</Note>
       <div className="editor">{code}</div>
       <div className="row" style={{ marginTop: 20 }}>
-        <button className="btn primary" onClick={() => app.navigate('home')}>{next}</button>
-        <button className="btn">{t('step10.pdf')}</button>
+        <button className="btn primary" onClick={() => app.navigate('cases')}>{next}</button>
+        <button className="btn" onClick={printCaseReport}>⤓ {t('step10.pdf')}</button>
       </div>
       <p className="small muted" style={{ marginTop: 10 }}>{t('step10.note')}</p>
+      <CaseReport />
     </>
   )
 }

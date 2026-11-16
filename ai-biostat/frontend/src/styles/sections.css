@@ -223,3 +223,30 @@ h1.serif{font-size:34px; line-height:1.15}
 .scale-row .seg button{min-width:44px}
 .prepost{display:grid; grid-template-columns:auto 1fr; gap:8px 12px; align-items:center}
 @media (max-width:600px){ .prepost{grid-template-columns:1fr} .scale-row > span{flex:1 1 40%} }
+
+/* отчёт по кейсу (шаг 10 → «Скачать отчёт PDF»): на экране скрыт, печатается только он, чёрным по белому */
+.report-print{display:none}
+@media print{
+  html.printing-report #app{display:none}
+  html.printing-report, html.printing-report body{background:#fff !important}
+  .report-print h2, .report-print h3{break-after:avoid; page-break-after:avoid}
+  html.printing-report .report-print, html.printing-report .report-print *{visibility:visible}
+  html.printing-report .report-print{display:block; color:#000; background:#fff; font-family:var(--font); font-size:12px; line-height:1.5}
+  .report-print h1{font-family:var(--serif); font-size:20px; margin:6px 0 4px}
+  .report-print h2{font-size:14px; margin:16px 0 6px; border-bottom:1px solid #999; padding-bottom:2px}
+  .report-print h3{font-size:12.5px; margin:10px 0 3px}
+  .r-head{display:flex; justify-content:space-between; font-size:11px; color:#444; border-bottom:2px solid #0E6B58; padding-bottom:4px}
+  .r-meta{margin:0 0 8px}
+  .r-score{display:flex; gap:18px; align-items:center; border:1px solid #bbb; border-radius:6px; padding:8px 12px; break-inside:avoid}
+  .r-total{font-size:28px; font-weight:700}
+  .r-total span{font-size:14px; color:#555}
+  .r-muted{color:#555}
+  .r-table{width:auto; min-width:300px; border-collapse:collapse}
+  .r-table td{border-bottom:1px solid #ddd; padding:2px 16px 2px 0; white-space:normal}
+  .r-cols{display:grid; grid-template-columns:repeat(3,1fr); gap:12px; break-inside:avoid}
+  .r-cols ul{margin:2px 0; padding-left:16px}
+  .r-answer{white-space:pre-wrap; border-left:2px solid #ccc; padding-left:8px; margin:0}
+  .r-code{font-family:var(--mono); font-size:10px; white-space:pre-wrap; border:1px solid #ddd; padding:6px; margin:0; break-inside:avoid}
+  .r-foot{margin-top:16px; font-size:10px}
+  @page{margin:14mm}
+}

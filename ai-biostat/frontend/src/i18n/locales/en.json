@@ -277,18 +277,22 @@
   "argument": "Arguments",
   "argumentPh": "Why you disagree with the score",
   "argumentEmpty": "Write your arguments",
-  "send": "Send to the teacher"
+  "send": "Send to the teacher",
+  "resolved": "Teacher’s decision",
+  "decisionChange": "The teacher changed the score: {{score}} of 100.",
+  "decisionKeep": "The teacher kept the score unchanged.",
+  "decisionReason": "Reason"
  },
  "step10": {
   "title": "Step 10. Case completed",
   "result": "Result: {{total}} of 100 · {{letter}} ({{label}})",
-  "resultNote": ", preliminary. You will be notified of the teacher's decision in the app and by e-mail.",
+  "resultNote": ", preliminary. The teacher’s decision on the score will appear in this case at the Debriefing step.",
   "otherCode": "The {{lang}} code is now available for comparison:",
-  "nextHarder": "Next case (harder)",
-  "next": "Next case",
+  "nextHarder": "To other cases (pick a harder one)",
+  "next": "To other cases",
   "retry": "Try again with new data",
   "pdf": "Download PDF report",
-  "note": "The next case is not filled in the prototype — the button goes to the home page."
+  "note": "A print window will open: under “Printer” choose “Save as PDF” and click “Save”."
  },
  "score": {
   "data": "Data",
@@ -800,5 +804,14 @@
   "no": "No",
   "min": "minimum",
   "max": "maximum"
+ },
+ "report": {
+  "title": "Case report",
+  "participant": "Participant",
+  "answers": "Participant’s answers",
+  "stepN": "Step {{n}}. {{name}}",
+  "methodNotOk": "wrong method chosen",
+  "reference": "Reference conclusion",
+  "footer": "The AI score is preliminary until the teacher’s decision. The training data are simulated and contain no real patient information."
  }
 }

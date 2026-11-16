@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import type { MyDispute } from '@/api/DisputesApi'
 import { useTranslation } from 'react-i18next'
 import { useServices } from '@/app/ServicesContext'
 import type { DebriefItem } from '@/domain/scoring/DebriefBuilder'
@@ -52,6 +53,12 @@ export function Step9Debrief() {
   const [disputeOpen, setDisputeOpen] = useState(false)
   const sheet = useMemo(() => scorer.score(def, c, level), [scorer, def, c, level])
   const fb = useMemo(() => debrief.build(def, c, sheet), [debrief, def, c, sheet])
+  // решение преподавателя по оспариванию этого кейса (последнее)
+  const [decision, setDecision] = useState<MyDispute | null>(null)
+  useEffect(() => {
+    if (!c.disputed) return
+    disputes.mine().then(list => setDecision(list.find(d => d.case_id === def.id) ?? null)).catch(() => {})
+  }, [disputes, def.id, c.disputed])
 
   const sendDispute = async (step: string, text: string) => {
     await disputes.open(def.id, step, text, sheet.total)
@@ -66,10 +73,16 @@ export function Step9Debrief() {
         <div>
           <div className="score">{sheet.total} <span className="muted" style={{ fontSize: 22 }}>{t('step9.outOf')}</span></div>
           <GradeBadge grade={grades.gradeOf(sheet.total)} />
-          <span className="tag">{c.disputed ? t('step9.disputed') : t('step9.prelim')}</span>
+          <span className="tag">{decision?.status === 'resolved' ? t('step9.resolved') : c.disputed ? t('step9.disputed') : t('step9.prelim')}</span>
         </div>
         <button className="btn" disabled={c.disputed} onClick={() => setDisputeOpen(true)}>{t('step9.dispute')}</button>
       </div>
+      {decision?.status === 'resolved' && (
+        <Note kind={decision.decision === 'change' ? 'ok' : 'info'}>
+          <b>{decision.decision === 'change' ? t('step9.decisionChange', { score: decision.new_score }) : t('step9.decisionKeep')}</b>
+          {decision.reason && <> {t('step9.decisionReason')}: {decision.reason}</>}
+        </Note>
+      )}
       <div className="cards3">
         <div className="c3 g"><b>{t('step9.good')}</b><BulletList items={fb.good} /></div>
         <div className="c3 o"><b>{t('step9.bad')}</b><BulletList items={fb.bad} /></div>
