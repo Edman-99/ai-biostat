@@ -436,6 +436,16 @@
    "password": "Password",
    "group": "Group",
    "cardNote": "You can change the password in your profile after signing in."
+  },
+  "scope": {
+   "mine": "Your groups: {{groups}}. You see and export only these.",
+   "none": "No groups are assigned to you yet — contact the lead teacher.",
+   "all": "You are the lead teacher: you see all groups. Other teachers see only the groups assigned to them.",
+   "teachersTitle": "Teachers and their groups",
+   "groups": "Groups",
+   "allGroups": "all groups (lead)",
+   "noGroups": "no groups",
+   "howTo": "New teachers are created and assigned groups by the system administrator."
   }
  },
  "nav": {

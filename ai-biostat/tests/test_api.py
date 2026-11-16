@@ -7,10 +7,14 @@ from app.security import hash_password
 from app import main
 importlib.reload(main)
 
-def make(code, role, pwd="123456"):
+def make(code, role, pwd="123456", grp="G1", groups=("*",)):
+    """Преподаватель по умолчанию — главный (видит все группы); groups=… — закреплённые группы."""
     h, s = hash_password(pwd)
     with db.connect() as con:
-        con.execute("INSERT OR REPLACE INTO participants(code,pwd_hash,salt,role,grp,lang) VALUES(?,?,?,?,?,?)", (code, h, s, role, "G1", "ru"))
+        con.execute("INSERT OR REPLACE INTO participants(code,pwd_hash,salt,role,grp,lang) VALUES(?,?,?,?,?,?)", (code, h, s, role, grp, "ru"))
+        if role == "teacher":
+            con.execute("DELETE FROM teacher_groups WHERE teacher=?", (code,))
+            con.executemany("INSERT INTO teacher_groups VALUES(?,?)", [(code, g) for g in groups])
 
 def client(code, pwd="123456"):
     c = TestClient(main.app)
@@ -119,3 +123,44 @@ def test_teacher_analytics_codes_only_and_trainer():
     assert att["progress"]["flags"] == [4] and att["score"] == 70
     assert a["diagnostics"]["P-20"]["Биостатистика"] == 72
     assert a["trainer"]["P-20"]["t1"]["ok"] is True
+
+
+def test_teacher_sees_only_assigned_groups():
+    make("P-31", "student", grp="A1"); make("P-32", "student", grp="B1")
+    make("T-31", "teacher", groups=("A1",)); make("T-32", "teacher", groups=())
+    for code in ("P-31", "P-32"):
+        c = client(code)
+        c.put("/api/state", json={"state": {"cases": {"21": {"step": 10, "maxStep": 10, "score": 50}}}})
+        c.post("/api/disputes", json={"case_id": "21", "step": "Шаг 7", "text": "x", "ai_score": 50})
+    t = client("T-31")
+    assert t.get("/api/me").json()["scope"] == ["A1"]
+    ov = t.get("/api/teacher/overview").json()
+    assert {p["code"] for p in ov["people"]} == {"P-31"}
+    assert {d["code"] for d in ov["disputes"]} == {"P-31"}
+    an = t.get("/api/teacher/analytics").json()
+    assert {p["code"] for p in an["people"]} == {"P-31"} and {a["code"] for a in an["attempts"]} == {"P-31"}
+    assert "P-32" not in t.get("/api/teacher/export/attempts.csv").text
+    assert t.post("/api/teacher/participants/P-32/reset").status_code == 404
+    assert t.post("/api/teacher/participants/P-31/reset").status_code == 200
+    assert t.post("/api/teacher/confirm/P-32/21").status_code == 404
+    other = [d for d in client("T-1").get("/api/teacher/overview").json()["disputes"] if d["code"] == "P-32"][0]
+    assert t.post(f"/api/teacher/disputes/{other['id']}", json={"decision": "keep", "reason": "x"}).status_code == 404
+    assert t.post("/api/teacher/participants/group", json={"group": "B1", "count": 1}).status_code == 403
+    csv_text = "\n".join(["code;role;group;lang", "P-33;student;B1;ru", "T-33;teacher;A1;ru", "P-34;student;A1;ru"])
+    r = t.post("/api/teacher/participants/import", json={"csv": csv_text}).json()
+    assert [a["code"] for a in r["added"]] == ["P-34"] and len(r["errors"]) == 2
+    assert t.get("/api/teacher/teachers").status_code == 403
+    assert client("T-32").get("/api/teacher/overview").json()["people"] == []   # без групп — никого
+    tl = {x["code"]: x["groups"] for x in client("T-1").get("/api/teacher/teachers").json()}
+    assert tl["T-31"] == ["A1"] and tl["T-1"] == ["*"]
+
+
+def test_existing_teachers_become_admin_on_upgrade():
+    with db.connect() as con:
+        con.execute("DROP TABLE teacher_groups")
+    make("T-40", "student")                       # заглушка, чтобы был кто-то ещё
+    with db.connect() as con:
+        con.execute("UPDATE participants SET role='teacher' WHERE code='T-40'")
+    db.init()
+    with db.connect() as con:
+        assert con.execute("SELECT grp FROM teacher_groups WHERE teacher='T-40'").fetchone()["grp"] == "*"

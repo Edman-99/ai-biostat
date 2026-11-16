@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useServices } from '@/app/ServicesContext'
+import { useAppState, useServices } from '@/app/ServicesContext'
 import type { IssuedPassword, Lang } from '@/api/types'
 import { Note } from '@/ui/common'
 import { IssuedPasswords } from './IssuedPasswords'
@@ -12,6 +12,9 @@ const LANGS: [Lang, string][] = [['kk', 'Қазақша'], ['ru', 'Русски�
 export function CreateGroup({ onCreated }: { onCreated: () => void }) {
   const { t } = useTranslation()
   const { teacher } = useServices()
+  // обычный преподаватель добавляет людей только в свои группы; главный (scope = null) — в любую
+  const scope = useAppState().me?.scope
+  const myGroups = Array.isArray(scope) ? scope : null
   const [group, setGroup] = useState('')
   const [count, setCount] = useState(15)
   const [role, setRole] = useState<Role>('student')
@@ -37,7 +40,13 @@ export function CreateGroup({ onCreated }: { onCreated: () => void }) {
       <p className="small muted">{t('teacher.group.intro')}</p>
       <div className="group-form">
         <div className="g-name"><label className="f" htmlFor="gname">{t('teacher.group.name')}</label>
-          <input className="t" id="gname" placeholder={t('teacher.group.namePh')} value={group} maxLength={30} onChange={e => setGroup(e.target.value)} /></div>
+          {myGroups
+            ? <select className="t" id="gname" value={group} onChange={e => setGroup(e.target.value)}>
+                <option value="">—</option>
+                {myGroups.map(g => <option key={g} value={g}>{g}</option>)}
+              </select>
+            : <input className="t" id="gname" placeholder={t('teacher.group.namePh')} value={group} maxLength={30} onChange={e => setGroup(e.target.value)} />}
+        </div>
         <div className="g-count"><label className="f" htmlFor="gcount">{t('teacher.group.count')}</label>
           <input className="t" id="gcount" type="number" min={1} max={100} value={count} onChange={e => setCount(Number(e.target.value))} /></div>
         <div><span className="f" style={{ display: 'block' }}>{t('teacher.group.role')}</span>

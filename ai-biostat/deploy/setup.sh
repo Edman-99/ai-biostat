@@ -65,7 +65,7 @@ chmod +x /etc/cron.daily/ai-biostat-backup
 echo "==> 6/6 Команда для участников"
 cat > /usr/local/bin/aib-participants <<'PT'
 #!/bin/sh
-# aib-participants import файл.csv | reset КОД | list
+# aib-participants import файл.csv | reset КОД | list | teachers | assign T-0002 "группа" … | unassign T-0002 "группа"
 set -e
 [ "$1" = "import" ] && [ -n "$2" ] && { install -o aib -g aib -m 600 "$2" /opt/ai-biostat/data/_import.csv; set -- import /opt/ai-biostat/data/_import.csv; }
 cd /opt/ai-biostat/data

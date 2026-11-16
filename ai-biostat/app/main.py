@@ -6,7 +6,7 @@ from fastapi import FastAPI, HTTPException, Request, Response, Depends
 from fastapi.responses import FileResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
-from . import db, participants
+from . import access, db, participants
 from .security import check_password, hash_password, new_token
 
 app = FastAPI(title="AI-Biostat", docs_url=None, redoc_url=None)
@@ -30,9 +30,22 @@ def current(request: Request):
 
 
 def teacher(user=Depends(current)):
+    """Преподаватель + scope: None — главный (видит всех), иначе множество закреплённых групп."""
     if user["role"] != "teacher":
         raise HTTPException(403, "Доступно только преподавателю")
+    with db.connect() as con:
+        user["scope"] = access.groups_of(con, user["code"])
     return user
+
+
+def require_visible(con, t, code: str):
+    if not access.code_visible(con, t["scope"], code):
+        raise HTTPException(404, "Участник не найден среди ваших групп")
+
+
+def require_admin(t):
+    if t["scope"] is not None:
+        raise HTTPException(403, "Доступно только главному преподавателю")
 
 
 class Login(BaseModel):
@@ -72,8 +85,13 @@ def logout(request: Request, response: Response):
 
 
 def _me(u):
-    return {"code": u["code"], "role": u["role"], "group": u["grp"], "lang": u["lang"],
-            "first_name": u.get("first_name") or "", "last_name": u.get("last_name") or ""}
+    out = {"code": u["code"], "role": u["role"], "group": u["grp"], "lang": u["lang"],
+           "first_name": u.get("first_name") or "", "last_name": u.get("last_name") or ""}
+    if u["role"] == "teacher":                 # какие группы видит преподаватель (null — все)
+        with db.connect() as con:
+            scope = access.groups_of(con, u["code"])
+        out["scope"] = None if scope is None else sorted(scope)
+    return out
 
 
 @app.get("/api/me")
@@ -212,15 +230,24 @@ def my_disputes(user=Depends(current)):
 # ---------- преподаватель ----------
 @app.get("/api/teacher/overview")
 def overview(t=Depends(teacher)):
+    cond, args = access.group_filter(t["scope"], "p.grp")
     with db.connect() as con:
         people = con.execute("""SELECT p.code, p.first_name, p.last_name, p.role, p.grp, a.case_id, a.step, a.max_step, a.score, a.grade,
             a.status, a.updated_at,
             (SELECT COUNT(*) FROM events e WHERE e.code=p.code AND e.type='tutor_open') AS tutor_opens
             FROM participants p LEFT JOIN attempts a ON a.code=p.code
-            WHERE p.role!='teacher' ORDER BY p.grp, p.code""").fetchall()
+            WHERE p.role!='teacher' AND """ + cond + """ ORDER BY p.grp, p.code""", args).fetchall()
         disputes = con.execute("SELECT d.*, p.first_name, p.last_name FROM disputes d LEFT JOIN participants p "
-                               "ON p.code=d.code WHERE d.status='open' ORDER BY d.created_at").fetchall()
+                               "ON p.code=d.code WHERE d.status='open' AND " + cond + " ORDER BY d.created_at", args).fetchall()
     return {"people": [dict(r) for r in people], "disputes": [dict(r) for r in disputes]}
+
+
+def _visible(t, column="code") -> tuple[str, list]:
+    """Условие «участник из групп этого преподавателя» для любой таблицы с колонкой code."""
+    if t["scope"] is None:
+        return "1=1", []
+    cond, args = access.group_filter(t["scope"], "grp")
+    return f"{column} IN (SELECT code FROM participants WHERE role!='teacher' AND {cond})", args
 
 
 def _json(text, default):
@@ -233,13 +260,16 @@ def _json(text, default):
 @app.get("/api/teacher/analytics")
 def analytics(t=Depends(teacher)):
     """Сырьё для сводки «Аналитика»: только коды, без ФИО. Проценты по шагам считает браузер (GroupAnalytics)."""
+    cond, args = access.group_filter(t["scope"], "p.grp")
+    vis, vargs = _visible(t)
     with db.connect() as con:
         people = con.execute("""SELECT p.code, p.role, p.grp, s.updated_at AS last_active
             FROM participants p LEFT JOIN state s ON s.code=p.code
-            WHERE p.role!='teacher' AND p.active=1""").fetchall()
-        attempts = con.execute("SELECT code, case_id, status, score, max_step, answers FROM attempts").fetchall()
-        diags = con.execute("SELECT code, pct FROM diagnostics ORDER BY ts").fetchall()
-        states = con.execute("SELECT code, json FROM state").fetchall()
+            WHERE p.role!='teacher' AND p.active=1 AND """ + cond, args).fetchall()
+        attempts = con.execute("SELECT code, case_id, status, score, max_step, answers FROM attempts WHERE " + vis,
+                               vargs).fetchall()
+        diags = con.execute("SELECT code, pct FROM diagnostics WHERE " + vis + " ORDER BY ts", vargs).fetchall()
+        states = con.execute("SELECT code, json FROM state WHERE " + vis, vargs).fetchall()
     first_diag = {}
     for r in diags:                       # первая попытка = входная диагностика
         first_diag.setdefault(r["code"], _json(r["pct"], {}))
@@ -257,6 +287,14 @@ def analytics(t=Depends(teacher)):
     }
 
 
+@app.get("/api/teacher/teachers")
+def teachers(t=Depends(teacher)):
+    """Только главному: преподаватели и закреплённые за ними группы ('*' — все)."""
+    require_admin(t)
+    with db.connect() as con:
+        return [{"code": c, "groups": g} for c, g in access.all_assignments(con).items()]
+
+
 class Resolve(BaseModel):
     decision: str          # 'keep' — оставить оценку, 'change' — изменить
     new_score: int | None = None
@@ -271,6 +309,7 @@ def resolve(dispute_id: int, body: Resolve, t=Depends(teacher)):
         d = con.execute("SELECT * FROM disputes WHERE id=?", (dispute_id,)).fetchone()
         if not d:
             raise HTTPException(404, "Обращение не найдено")
+        require_visible(con, t, d["code"])
         con.execute("UPDATE disputes SET status='resolved', decision=?, new_score=?, reason=?, resolved_by=?, "
                     "resolved_at=? WHERE id=?",
                     (body.decision, body.new_score, body.reason[:2000], t["code"], time.time(), dispute_id))
@@ -283,6 +322,7 @@ def resolve(dispute_id: int, body: Resolve, t=Depends(teacher)):
 @app.post("/api/teacher/confirm/{code}/{case_id}")
 def confirm(code: str, case_id: str, t=Depends(teacher)):
     with db.connect() as con:
+        require_visible(con, t, code)
         con.execute("UPDATE attempts SET status='confirmed' WHERE code=? AND case_id=? AND status='completed'",
                     (code, case_id))
         db.audit(con, t["code"], "confirm", {"code": code, "case": case_id})
@@ -298,14 +338,22 @@ def import_participants(body: ImportIn, t=Depends(teacher)):
     """CSV code;role;group;lang из панели преподавателя. Пароли возвращаются один раз и нигде не хранятся."""
     if len(body.csv) > 500_000:
         raise HTTPException(400, "Файл слишком большой")
-    res = participants.import_rows(participants.parse_csv(body.csv), t["code"])
-    return {"added": res.added, "skipped": res.skipped, "errors": res.errors}
+    rows, denied = participants.parse_csv(body.csv), []
+    if t["scope"] is not None:            # обычный преподаватель — только студенты/специалисты своих групп
+        allowed = [r for r in rows if (r.get("role") or "student") != "teacher" and (r.get("group") or "") in t["scope"]]
+        denied = [f"{r.get('code') or '?'}: группа «{r.get('group') or ''}» не закреплена за вами"
+                  for r in rows if r not in allowed and (r.get("code") or "")]
+        rows = allowed
+    res = participants.import_rows(rows, t["code"])
+    return {"added": res.added, "skipped": res.skipped, "errors": denied + res.errors}
 
 
 @app.post("/api/teacher/participants/{code}/reset")
 def reset_participant(code: str, t=Depends(teacher)):
     if code.strip().upper() == t["code"]:
         raise HTTPException(400, "Свой пароль так сбросить нельзя")
+    with db.connect() as con:
+        require_visible(con, t, code)
     pwd = participants.reset_password(code, t["code"])
     if not pwd:
         raise HTTPException(404, "Участник не найден")
@@ -329,6 +377,8 @@ def create_group(body: GroupIn, t=Depends(teacher)):
         raise HTTPException(400, f"Количество — от 1 до {participants.MAX_GROUP}")
     if body.role not in ("student", "specialist") or body.lang not in participants.LANGS:
         raise HTTPException(400, "Неверная роль или язык")
+    if t["scope"] is not None and group not in t["scope"]:
+        raise HTTPException(403, f"Группа «{group}» не закреплена за вами — обратитесь к главному преподавателю")
     res = participants.create_group(group, body.count, body.role, body.lang, t["code"])
     return {"added": res.added, "skipped": res.skipped, "errors": res.errors}
 
@@ -347,7 +397,8 @@ def export(kind: str, t=Depends(teacher)):
     if kind not in EXPORTS:
         raise HTTPException(404)
     with db.connect() as con:
-        rows = con.execute(EXPORTS[kind]).fetchall()
+        vis, vargs = _visible(t)
+        rows = con.execute(f"SELECT * FROM ({EXPORTS[kind]}) WHERE {vis}", vargs).fetchall()
         db.audit(con, t["code"], "export", kind)
     buf = io.StringIO()
     buf.write("\ufeff")                       # чтобы Excel правильно открыл кириллицу

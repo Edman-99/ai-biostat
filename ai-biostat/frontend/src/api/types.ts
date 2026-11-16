@@ -12,6 +12,14 @@ export interface User {
   lang: Lang | null
   first_name: string
   last_name: string
+  /** только у преподавателя: закреплённые группы; null — главный, видит все */
+  scope?: string[] | null
+}
+
+export interface TeacherScope {
+  code: string
+  /** '*' — все группы */
+  groups: string[]
 }
 
 export type AttemptStatus = 'in_progress' | 'completed' | 'disputed' | 'confirmed'

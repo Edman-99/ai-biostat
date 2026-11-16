@@ -6,6 +6,7 @@ import { Note, Who } from '@/ui/common'
 import { CreateGroup } from './CreateGroup'
 import { ImportParticipants } from './ImportParticipants'
 import { ResetPasswordButton } from './ResetPasswordButton'
+import { TeacherScopePanel } from './TeacherScopePanel'
 import type { OverviewState } from './useOverview'
 
 const EXPORTS: ExportKind[] = ['attempts', 'events', 'diagnostics', 'disputes']
@@ -68,6 +69,7 @@ export function ParticipantsTab({ overview }: { overview: OverviewState }) {
   return (
     <>
       <div className="spread"><h1>{t('teacher.tabs.groups')}</h1><button className="btn" onClick={reload}>{t('common.refresh')}</button></div>
+      <TeacherScopePanel />
       <CreateGroup onCreated={reload} />
       <ImportParticipants onImported={reload} />
       <div className="row exports">

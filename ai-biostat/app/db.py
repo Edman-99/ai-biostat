@@ -22,6 +22,7 @@ CREATE TABLE IF NOT EXISTS disputes(
   id INTEGER PRIMARY KEY AUTOINCREMENT, code TEXT, case_id TEXT, step TEXT, text TEXT, ai_score INTEGER,
   status TEXT DEFAULT 'open', decision TEXT, new_score INTEGER, reason TEXT, resolved_by TEXT,
   created_at REAL, resolved_at REAL);
+CREATE TABLE IF NOT EXISTS teacher_groups(teacher TEXT NOT NULL, grp TEXT NOT NULL, PRIMARY KEY(teacher, grp));
 CREATE TABLE IF NOT EXISTS audit(id INTEGER PRIMARY KEY AUTOINCREMENT, actor TEXT, action TEXT, detail TEXT, ts REAL);
 """
 
@@ -36,7 +37,12 @@ def connect():
 
 def init():
     with connect() as con:
+        had_scopes = con.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='teacher_groups'").fetchone()
         con.executescript(SCHEMA)
+        if not had_scopes:
+            # v0.9.0: группы преподавателей. Кто был преподавателем до этого (T-0001), остаётся главным — видит всех.
+            con.execute("INSERT OR IGNORE INTO teacher_groups(teacher, grp) "
+                        "SELECT code, '*' FROM participants WHERE role='teacher'")
         cols = {r["name"] for r in con.execute("PRAGMA table_info(participants)")}
         for col in ("first_name", "last_name"):          # профиль (добавлено позже — миграция)
             if col not in cols:
