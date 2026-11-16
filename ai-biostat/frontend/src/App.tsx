@@ -3,7 +3,7 @@ import { useAppState } from '@/app/ServicesContext'
 import type { Screen } from '@/app/AppStore'
 import { LoginScreen } from '@/screens/LoginScreen'
 import { ProfileScreen } from '@/screens/ProfileScreen'
-import { DiagnosticScreen } from '@/screens/DiagnosticScreen'
+import { DiagnosticScreen, ExitDiagnosticScreen } from '@/screens/DiagnosticScreen'
 import { DiagnosticResultScreen } from '@/screens/DiagnosticResultScreen'
 import { HomeScreen } from '@/screens/HomeScreen'
 import { PlayerScreen } from '@/screens/player/PlayerScreen'
@@ -18,6 +18,7 @@ const SCREENS: Record<Screen, ComponentType> = {
   login: LoginScreen,
   profile: ProfileScreen,
   diag: DiagnosticScreen,
+  exitdiag: ExitDiagnosticScreen,
   diagres: DiagnosticResultScreen,
   home: HomeScreen,
   cases: CasesScreen,

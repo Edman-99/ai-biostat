@@ -38,6 +38,11 @@ export class SessionService {
     this.app.signIn(me, this.normalize(await this.progress.load()))
   }
 
+  /** Обновить данные о себе (например, преподаватель открыл итоговую диагностику). Ошибки сети не мешают. */
+  async refreshMe(): Promise<void> {
+    try { this.app.setMe(await this.auth.me()) } catch { /* остаёмся с прежними данными */ }
+  }
+
   async logout(): Promise<void> {
     try { await this.auth.logout() } catch { /* всё равно выходим */ }
     location.reload()

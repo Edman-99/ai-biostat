@@ -85,17 +85,17 @@ export function AnalyticsTab() {
 
           <div className="panel" style={{ marginTop: 18 }}>
             <h2>{t('analytics.compTitle')}</h2>
-            <p className="small muted">{t('analytics.compLead', { n: rep.diagnosticsDone })}</p>
+            <p className="small muted">{t('analytics.compLead', { n: rep.diagnosticsDone })}{rep.exitDone > 0 ? ` ${t('analytics.compExit', { n: rep.exitDone })}` : ''}</p>
             <div className="dual-bars">
               {rep.competencies.map(c => (
                 <div key={c.block}>
                   <span>{t(`blocks.${BLOCK_KEY[c.block]}`)}</span>
-                  <i><b style={{ width: `${c.entry ?? 0}%` }} /><em style={{ width: `${c.cases ?? 0}%` }} /></i>
-                  <strong>{show(c.entry)} → {show(c.cases)}</strong>
+                  <i><b style={{ width: `${c.entry ?? 0}%` }} /><em style={{ width: `${(rep.exitDone ? c.exit : c.cases) ?? 0}%` }} /></i>
+                  <strong>{show(c.entry)} → {show(rep.exitDone ? c.exit : c.cases)}</strong>
                 </div>
               ))}
             </div>
-            <div className="legend"><span><i className="l-entry" />{t('progress.legendEntry')}</span><span><i className="l-now" />{t('progress.legendCases')}</span></div>
+            <div className="legend"><span><i className="l-entry" />{t('progress.legendEntry')}</span><span><i className="l-now" />{t(rep.exitDone ? 'progress.legendExit' : 'progress.legendCases')}</span></div>
           </div>
           <p className="small muted" style={{ marginTop: 14 }}>{t('analytics.footer')}</p>
         </>

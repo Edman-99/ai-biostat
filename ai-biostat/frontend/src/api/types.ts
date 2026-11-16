@@ -14,6 +14,17 @@ export interface User {
   last_name: string
   /** только у преподавателя: закреплённые группы; null — главный, видит все */
   scope?: string[] | null
+  /** только у студента/специалиста: итоговая диагностика открыта для его группы */
+  exit_open?: boolean
+}
+
+/** GET /api/teacher/diagnostics — по группам преподавателя */
+export interface DiagGroupStatus {
+  grp: string
+  people: number
+  entry_done: number
+  exit_done: number
+  exit_open: boolean
 }
 
 export interface TeacherScope {
@@ -85,6 +96,8 @@ export interface AnalyticsData {
   }[]
   /** код → проценты входной диагностики (первая попытка) */
   diagnostics: Record<string, Record<string, number>>
+  /** код → проценты итоговой диагностики (вариант Б) */
+  exit?: Record<string, Record<string, number>>
   /** код → ответы тренажёра «Проверка ИИ» */
   trainer: Record<string, Record<string, AiCheckAnswer>>
 }

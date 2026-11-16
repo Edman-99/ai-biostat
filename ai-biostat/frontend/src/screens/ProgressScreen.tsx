@@ -25,7 +25,8 @@ export function ProgressScreen() {
   const { t } = useTranslation()
   const lang = useLang()
   const { app, aiCheck } = useServices()
-  const { diag, trainer } = useAppState()
+  const { diag, exit, trainer } = useAppState()
+  const exitDone = exit.done && !!exit.pct
   const results = useCaseResults()
   const available = results.filter(r => r.status !== 'empty')
   const done = results.filter(r => r.status === 'done')
@@ -54,7 +55,7 @@ export function ProgressScreen() {
         <div className="dual-bars">
           {BLOCKS.map(b => {
             const entry = diag.pct?.[b] ?? null
-            const now = fromCases?.[b] ?? null
+            const now = exitDone ? exit.pct![b] ?? null : fromCases?.[b] ?? null
             return (
               <div key={b}>
                 <span>{t(`blocks.${BLOCK_KEY[b]}`)}</span>
@@ -64,8 +65,8 @@ export function ProgressScreen() {
             )
           })}
         </div>
-        <div className="legend"><span><i className="l-entry" />{t('progress.legendEntry')}</span><span><i className="l-now" />{t('progress.legendCases')}</span></div>
-        {!fromCases && <Note>{t('progress.noCasesYet')}</Note>}
+        <div className="legend"><span><i className="l-entry" />{t('progress.legendEntry')}</span><span><i className="l-now" />{t(exitDone ? 'progress.legendExit' : 'progress.legendCases')}</span></div>
+        {!fromCases && !exitDone && <Note>{t('progress.noCasesYet')}</Note>}
       </div>
 
       <h2 style={{ marginTop: 26 }}>{t('progress.casesTitle')}</h2>

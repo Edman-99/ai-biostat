@@ -76,7 +76,18 @@
   "resultTitle": "Your starting level",
   "growth": "Area for growth — “{{weak}}”. The tutor will ask more questions on this topic.",
   "startCase": "Start the first case",
-  "exitNote": "This is the entry diagnostic: it is taken once. The final one (variant B) comes at the end of the pilot."
+  "exitNote": "This is the entry diagnostic: it is taken once. The final one (variant B) will be opened by your teacher at the end of the pilot.",
+  "exitHeader": "Final diagnostic · {{block}}",
+  "exitEyebrow": "Final diagnostic · variant B",
+  "exitOpenTitle": "Your teacher has opened the final diagnostic",
+  "exitOpenText": "20 questions like at the start, but different ones. Afterwards you will see how your results have changed.",
+  "exitStart": "Take the final diagnostic",
+  "compareTitle": "Your results: before and after",
+  "compareLead": "Entry (variant A) and final (variant B) diagnostic across the four competencies.",
+  "entry": "Entry diagnostic",
+  "exit": "Final diagnostic",
+  "total": "Correct answers: {{a}} of {{n}} → {{b}} of {{n}}",
+  "exitDone": "Final diagnostic completed. Thank you for taking part in the pilot!"
  },
  "home": {
   "hello": "Hello",
@@ -407,12 +418,21 @@
    }
   },
   "diagTab": {
-   "intro": "Two parallel variants of 20 items with the same structure: variant A — entry, variant B — final assessment.",
-   "competence": "Competence",
-   "variantA": "Variant A",
-   "variantB": "Variant B",
-   "total": "Total",
-   "note": "The distribution of items across competences is preliminary and approved by the author."
+   "eyebrow": "Entry and final",
+   "intro": "Students take variant A (entry) themselves at their first login. You open variant B (final) at the end of the pilot, for each group separately. Students will see an invitation on their home page.",
+   "empty": "You have no groups with students yet.",
+   "group": "Group",
+   "people": "Students",
+   "entryDone": "Entry (A)",
+   "exitDone": "Final (B)",
+   "status": "Final",
+   "open": "open",
+   "closed": "closed",
+   "openBtn": "Open final",
+   "closeBtn": "Close",
+   "confirmYes": "Yes, open",
+   "confirm": "Open the final diagnostic for group {{group}}? Open it at the end of the pilot, once students have done the cases.",
+   "note": "Results of both variants are in the Analytics tab and in the “Diagnostic · CSV” export (variant column: A or B)."
   },
   "group": {
    "title": "Create a group",
@@ -630,7 +650,8 @@
   "noCasesYet": "The result in cases will appear after your first completed case (with debriefing).",
   "casesTitle": "Cases",
   "caseDone": "Completed · {{score}} of 100 · {{grade}}",
-  "footer": "The final diagnostic (variant B) will be at the end of the pilot — then a before/after comparison will appear."
+  "footer": "The final diagnostic (variant B) will be at the end of the pilot — then a before/after comparison will appear.",
+  "legendExit": "Final diagnostic"
  },
  "analytics": {
   "eyebrow": "Teacher panel",
@@ -663,6 +684,7 @@
   },
   "compTitle": "Group competencies",
   "compLead": "Average of the entry diagnostic (completed: {{n}}) and of case results.",
-  "footer": "Final grading remains with the teacher. Data export for the study is in the «Participants and export» tab."
+  "footer": "Final grading remains with the teacher. Data export for the study is in the «Participants and export» tab.",
+  "compExit": "Took the final one: {{n}} — the bars show “entry → final”."
  }
 }

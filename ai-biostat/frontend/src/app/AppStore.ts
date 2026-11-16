@@ -4,7 +4,9 @@ import { newCaseProgress, type CaseProgress, type Level, type SavedState } from 
 import type { AiCheckAnswer } from '@/domain/aicheck/AiCheckTrainer'
 
 export type Screen = 'login' | 'diag' | 'diagres' | 'home' | 'player' | 'teacher' | 'profile'
-  | 'cases' | 'tutor' | 'analysis' | 'aicheck' | 'progress'
+  | 'cases' | 'tutor' | 'analysis' | 'aicheck' | 'progress' | 'exitdiag'
+
+export type DiagKind = 'entry' | 'exit'
 
 /** Разделы бокового меню студента и специалиста (по порядку). */
 export const LEARNER_SECTIONS: Screen[] = ['home', 'diagres', 'cases', 'tutor', 'analysis', 'aicheck', 'progress']
@@ -21,6 +23,8 @@ export interface AppState {
   prevScreen: Screen | null
   me: User | null
   diag: DiagState
+  /** итоговая диагностика (вариант Б), открывает преподаватель */
+  exit: DiagState
   cases: Record<string, CaseProgress>
   /** тренажёр «Проверка ИИ»: id задания → ответ */
   trainer: Record<string, AiCheckAnswer>
@@ -31,6 +35,7 @@ export interface AppState {
 const initial = (): AppState => ({
   screen: 'login', prevScreen: null, me: null,
   diag: { idx: 0, answers: [], done: false, pct: null },
+  exit: { idx: 0, answers: [], done: false, pct: null },
   cases: {}, trainer: {}, activeCaseId: '21', tutorOpen: false,
 })
 
@@ -44,6 +49,7 @@ export class AppStore extends Store<AppState> {
       const next: AppState = { ...s, me }
       if (saved) {
         next.diag = { ...s.diag, answers: saved.diagAns || [], done: !!saved.diagDone, pct: saved.pct || null }
+        if (saved.exit) next.exit = { ...s.exit, answers: saved.exit.answers || [], done: !!saved.exit.done, pct: saved.exit.pct || null }
         next.cases = Object.fromEntries(
           Object.entries(saved.cases || {}).map(([id, c]) => [id, { ...newCaseProgress(), ...c }]))
         next.trainer = saved.trainer || {}
@@ -70,19 +76,22 @@ export class AppStore extends Store<AppState> {
 
   openCase(id: string) { this.setState(s => ({ ...s, activeCaseId: id, screen: 'player' })) }
 
-  // ---------- диагностика ----------
-  answerDiag(i: number, answer: number) {
-    this.setState(s => {
-      const answers = [...s.diag.answers]
-      answers[i] = answer
-      return { ...s, diag: { ...s.diag, answers } }
-    })
+  // ---------- диагностика: entry — входная (вариант А), exit — итоговая (вариант Б) ----------
+  private patchDiag(kind: DiagKind, f: (d: DiagState) => Partial<DiagState>) {
+    const key = kind === 'exit' ? 'exit' : 'diag'
+    this.setState(s => ({ ...s, [key]: { ...s[key], ...f(s[key]) } }))
   }
 
-  nextDiagQuestion() { this.setState(s => ({ ...s, diag: { ...s.diag, idx: s.diag.idx + 1 } })) }
+  answerDiag(kind: DiagKind, i: number, answer: number) {
+    this.patchDiag(kind, d => { const answers = [...d.answers]; answers[i] = answer; return { answers } })
+  }
 
-  finishDiag(pct: Record<string, number>) {
-    this.setState(s => ({ ...s, diag: { ...s.diag, done: true, pct } }))
+  nextDiagQuestion(kind: DiagKind) { this.patchDiag(kind, d => ({ idx: d.idx + 1 })) }
+
+  finishDiag(kind: DiagKind, pct: Record<string, number>) { this.patchDiag(kind, () => ({ done: true, pct })) }
+
+  startExitDiag() {
+    this.setState(s => ({ ...s, exit: s.exit.done ? s.exit : { ...s.exit, idx: 0 }, screen: s.exit.done ? 'diagres' : 'exitdiag' }))
   }
 
   // ---------- кейс ----------

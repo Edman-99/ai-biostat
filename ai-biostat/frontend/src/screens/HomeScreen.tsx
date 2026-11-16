@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { Screen } from '@/app/AppStore'
 import { useAppState, useServices } from '@/app/ServicesContext'
@@ -8,6 +9,7 @@ import { useStepNames } from '@/screens/player/steps'
 import { Note, ProgressBar } from '@/ui/common'
 import { LearnerShell } from './LearnerShell'
 import { useCaseResults } from './useCaseResults'
+import { ExitInvite } from './DiagnosticResultScreen'
 
 const ROUTE: { key: string; icon: string; to: Screen }[] = [
   { key: 'diag', icon: '⌁', to: 'diagres' },
@@ -20,7 +22,9 @@ export function HomeScreen() {
   const { t } = useTranslation()
   const lang = useLang()
   const stepNames = useStepNames()
-  const { app } = useServices()
+  const { app, session } = useServices()
+  // преподаватель мог открыть итоговую диагностику, пока студент был на сайте
+  useEffect(() => { void session.refreshMe() }, [session])
   const { me, diag } = useAppState()
   const pct = diag.pct || DEFAULT_PCT
   const results = useCaseResults()
@@ -52,6 +56,7 @@ export function HomeScreen() {
         </div>
       </section>
 
+      <ExitInvite />
       <div style={{ marginTop: 26 }}>
         <h2>{me?.first_name ? t('home.helloName', { name: me.first_name }) : t('home.hello')}</h2>
         <p className="muted">{me?.code} · {roleWord}{me?.group ? ` · ${t('common.group', { group: me.group })}` : ''}</p>

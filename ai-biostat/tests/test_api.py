@@ -164,3 +164,27 @@ def test_existing_teachers_become_admin_on_upgrade():
     db.init()
     with db.connect() as con:
         assert con.execute("SELECT grp FROM teacher_groups WHERE teacher='T-40'").fetchone()["grp"] == "*"
+
+
+def test_exit_diagnostic_opened_per_group():
+    make("P-50", "student", grp="E1"); make("P-51", "student", grp="E2")
+    make("T-50", "teacher", groups=("E1",)); make("T-51", "teacher")
+    s1, s2, t, admin = client("P-50"), client("P-51"), client("T-50"), client("T-51")
+    assert s1.get("/api/me").json()["exit_open"] is False
+    body = {"variant": "B", "answers": [1], "pct": {"Биостатистика": 80}}
+    assert s1.post("/api/diagnostic", json=body).status_code == 403          # ещё закрыта
+    assert s1.post("/api/diagnostic", json={"variant": "A", "answers": [0], "pct": {"Биостатистика": 40}}).status_code == 200
+    assert t.post("/api/teacher/diagnostics/exit", json={"group": "E2", "open": True}).status_code == 403  # чужая группа
+    assert t.post("/api/teacher/diagnostics/exit", json={"group": "E1", "open": True}).status_code == 200
+    assert s1.get("/api/me").json()["exit_open"] is True
+    assert s2.get("/api/me").json()["exit_open"] is False
+    assert s1.post("/api/diagnostic", json=body).status_code == 200
+    assert s2.post("/api/diagnostic", json=body).status_code == 403
+    st = {r["grp"]: r for r in t.get("/api/teacher/diagnostics").json()}
+    assert list(st) == ["E1"] and st["E1"]["entry_done"] == 1 and st["E1"]["exit_done"] == 1 and st["E1"]["exit_open"] is True
+    assert "E2" in {r["grp"] for r in admin.get("/api/teacher/diagnostics").json()}
+    an = admin.get("/api/teacher/analytics").json()
+    assert an["diagnostics"]["P-50"]["Биостатистика"] == 40 and an["exit"]["P-50"]["Биостатистика"] == 80
+    assert t.post("/api/teacher/diagnostics/exit", json={"group": "E1", "open": False}).status_code == 200
+    assert s1.get("/api/me").json()["exit_open"] is False
+    assert admin.get("/api/teacher/export/diagnostics.csv").text.count("P-50") == 2

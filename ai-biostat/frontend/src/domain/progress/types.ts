@@ -56,4 +56,6 @@ export interface SavedState {
   cases: Record<string, CaseProgress>
   /** тренажёр «Проверка ИИ» (с v0.8.0; в старых записях поля нет) */
   trainer?: Record<string, AiCheckAnswer>
+  /** итоговая диагностика, вариант Б (с v0.13.0) */
+  exit?: { answers: (number | null)[]; done: boolean; pct: Record<string, number> | null }
 }

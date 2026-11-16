@@ -9,7 +9,7 @@ import { GradeScale } from '@/domain/grading/GradeScale'
 import { CaseScorer } from '@/domain/scoring/CaseScorer'
 import { DebriefBuilder } from '@/domain/scoring/DebriefBuilder'
 import { DiagnosticEvaluator } from '@/domain/diagnostic/Diagnostic'
-import { DIAGNOSTIC_A } from '@/domain/diagnostic/questions'
+import { DIAGNOSTIC_A, DIAGNOSTIC_B } from '@/domain/diagnostic/questions'
 import { SimulatedCodeRunner } from '@/domain/code/SimulatedCodeRunner'
 import type { CodeRunner } from '@/domain/code/CodeRunner'
 import { AiCheckEvaluator } from '@/domain/aicheck/AiCheckTrainer'
@@ -37,6 +37,8 @@ export interface Services {
   grades: GradeScale
   debrief: DebriefBuilder
   diagnostic: DiagnosticEvaluator
+  /** итоговая диагностика (вариант Б) */
+  exitDiagnostic: DiagnosticEvaluator
   codeRunner: CodeRunner
   aiCheck: AiCheckEvaluator
   analytics: GroupAnalytics
@@ -69,6 +71,7 @@ export function createServices(): Services {
     teacher: new TeacherApi(http),
     debrief: new DebriefBuilder(),
     diagnostic,
+    exitDiagnostic: new DiagnosticEvaluator(DIAGNOSTIC_B, 'B'),
     codeRunner: new SimulatedCodeRunner(),
   }
 }

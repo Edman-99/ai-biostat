@@ -1,5 +1,5 @@
 import type { HttpClient } from '@/core/http/HttpClient'
-import type { AnalyticsData, ExportKind, ImportResult, IssuedPassword, Lang, Overview, TeacherScope } from './types'
+import type { AnalyticsData, ExportKind, ImportResult, IssuedPassword, Lang, Overview, TeacherScope, DiagGroupStatus } from './types'
 
 export class TeacherApi {
   constructor(private http: HttpClient) {}
@@ -10,6 +10,12 @@ export class TeacherApi {
 
   /** только главному преподавателю */
   teachers() { return this.http.get<TeacherScope[]>('/api/teacher/teachers') }
+
+  diagnosticsStatus() { return this.http.get<DiagGroupStatus[]>('/api/teacher/diagnostics') }
+
+  setExitOpen(group: string, open: boolean) {
+    return this.http.post<{ ok: boolean }>('/api/teacher/diagnostics/exit', { group, open })
+  }
 
   resolveDispute(id: number, decision: 'keep' | 'change', new_score: number | null, reason: string) {
     return this.http.post<{ ok: boolean }>(`/api/teacher/disputes/${id}`, { decision, new_score, reason })

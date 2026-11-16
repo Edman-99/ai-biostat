@@ -91,7 +91,14 @@ def _me(u):
         with db.connect() as con:
             scope = access.groups_of(con, u["code"])
         out["scope"] = None if scope is None else sorted(scope)
+    else:                                      # итоговая диагностика открыта для группы студента?
+        with db.connect() as con:
+            out["exit_open"] = _exit_open(con, u["grp"])
     return out
+
+
+def _exit_open(con, grp) -> bool:
+    return bool(grp) and con.execute("SELECT 1 FROM exit_open WHERE grp=?", (grp,)).fetchone() is not None
 
 
 @app.get("/api/me")
@@ -195,9 +202,15 @@ class Diag(BaseModel):
 
 @app.post("/api/diagnostic")
 def diagnostic(body: Diag, user=Depends(current)):
+    """Вариант A — входная (один раз в начале), B — итоговая (только когда преподаватель открыл её для группы)."""
+    variant = body.variant.strip().upper()[:1]
+    if variant not in ("A", "B"):
+        raise HTTPException(400, "Неизвестный вариант диагностики")
     with db.connect() as con:
+        if variant == "B" and not _exit_open(con, user["grp"]):
+            raise HTTPException(403, "Итоговая диагностика ещё не открыта для вашей группы")
         con.execute("INSERT INTO diagnostics(code,variant,answers,pct,ts) VALUES(?,?,?,?,?)",
-                    (user["code"], body.variant[:2], json.dumps(body.answers),
+                    (user["code"], variant, json.dumps(body.answers),
                      json.dumps(body.pct, ensure_ascii=False), time.time()))
     return {"ok": True}
 
@@ -268,11 +281,11 @@ def analytics(t=Depends(teacher)):
             WHERE p.role!='teacher' AND p.active=1 AND """ + cond, args).fetchall()
         attempts = con.execute("SELECT code, case_id, status, score, max_step, answers FROM attempts WHERE " + vis,
                                vargs).fetchall()
-        diags = con.execute("SELECT code, pct FROM diagnostics WHERE " + vis + " ORDER BY ts", vargs).fetchall()
+        diags = con.execute("SELECT code, variant, pct FROM diagnostics WHERE " + vis + " ORDER BY ts", vargs).fetchall()
         states = con.execute("SELECT code, json FROM state WHERE " + vis, vargs).fetchall()
-    first_diag = {}
-    for r in diags:                       # первая попытка = входная диагностика
-        first_diag.setdefault(r["code"], _json(r["pct"], {}))
+    first_diag, first_exit = {}, {}
+    for r in diags:                       # первая попытка варианта A — входная, варианта B — итоговая
+        (first_exit if r["variant"] == "B" else first_diag).setdefault(r["code"], _json(r["pct"], {}))
     trainer = {}
     for r in states:
         tr = _json(r["json"], {}).get("trainer")
@@ -283,6 +296,7 @@ def analytics(t=Depends(teacher)):
         "attempts": [{"code": r["code"], "case_id": r["case_id"], "status": r["status"], "score": r["score"],
                       "max_step": r["max_step"], "progress": _json(r["answers"], None)} for r in attempts],
         "diagnostics": first_diag,
+        "exit": first_exit,
         "trainer": trainer,
     }
 
@@ -293,6 +307,44 @@ def teachers(t=Depends(teacher)):
     require_admin(t)
     with db.connect() as con:
         return [{"code": c, "groups": g} for c, g in access.all_assignments(con).items()]
+
+
+@app.get("/api/teacher/diagnostics")
+def diagnostics_status(t=Depends(teacher)):
+    """По группам преподавателя: сколько прошли входную (A) и итоговую (B), открыта ли итоговая."""
+    cond, args = access.group_filter(t["scope"], "p.grp")
+    with db.connect() as con:
+        rows = con.execute(f"""SELECT p.grp,
+              COUNT(*) AS people,
+              SUM(EXISTS(SELECT 1 FROM diagnostics d WHERE d.code=p.code AND d.variant='A')) AS entry_done,
+              SUM(EXISTS(SELECT 1 FROM diagnostics d WHERE d.code=p.code AND d.variant='B')) AS exit_done,
+              EXISTS(SELECT 1 FROM exit_open e WHERE e.grp=p.grp) AS exit_open
+            FROM participants p
+            WHERE p.role!='teacher' AND p.active=1 AND COALESCE(p.grp,'')!='' AND {cond}
+            GROUP BY p.grp ORDER BY p.grp""", args).fetchall()
+    return [dict(r) | {"exit_open": bool(r["exit_open"])} for r in rows]
+
+
+class ExitToggle(BaseModel):
+    group: str
+    open: bool
+
+
+@app.post("/api/teacher/diagnostics/exit")
+def toggle_exit(body: ExitToggle, t=Depends(teacher)):
+    """Открыть/закрыть итоговую диагностику группе (только своей; главный — любой)."""
+    group = body.group.strip()
+    if t["scope"] is not None and group not in t["scope"]:
+        raise HTTPException(403, "Группа не закреплена за вами")
+    with db.connect() as con:
+        if not con.execute("SELECT 1 FROM participants WHERE grp=? AND role!='teacher'", (group,)).fetchone():
+            raise HTTPException(404, "Такой группы нет")
+        if body.open:
+            con.execute("INSERT OR IGNORE INTO exit_open(grp, opened_by, opened_at) VALUES(?,?,?)", (group, t["code"], time.time()))
+        else:
+            con.execute("DELETE FROM exit_open WHERE grp=?", (group,))
+        db.audit(con, t["code"], "exit_open" if body.open else "exit_close", group)
+    return {"ok": True}
 
 
 class Resolve(BaseModel):

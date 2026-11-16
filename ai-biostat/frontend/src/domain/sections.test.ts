@@ -115,6 +115,7 @@ describe('компетенции и аналитика группы', () => {
         { code: 'P-3', case_id: '21', status: 'completed', score: 10, max_step: 10, progress: weak },
       ],
       diagnostics: { 'P-1': { 'Биостатистика': 72 }, 'P-2': { 'Биостатистика': 41 } },
+      exit: { 'P-1': { 'Биостатистика': 90 } },
       trainer: { 'P-1': { t1: { verdict: 'wrong', reason: '', ok: true, tries: 1 } } },
     }
     const ga = new GroupAnalytics(registry, scorer, new AiCheckEvaluator())
@@ -125,7 +126,8 @@ describe('компетенции и аналитика группы', () => {
     expect(r.started).toBe(2)
     expect(r.completed).toBe(1)
     expect(r.avgScore).toBe(100)
-    expect(r.competencies.find(c => c.block === 'Биостатистика')).toEqual({ block: 'Биостатистика', entry: 57, cases: 100 })
+    expect(r.competencies.find(c => c.block === 'Биостатистика')).toEqual({ block: 'Биостатистика', entry: 57, exit: 90, cases: 100 })
+    expect(r.exitDone).toBe(1)
     expect(r.trainerPct).toBe(33)
     expect(ga.report(data, null).avgScore).toBe(55)
   })

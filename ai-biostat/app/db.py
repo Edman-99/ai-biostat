@@ -22,6 +22,7 @@ CREATE TABLE IF NOT EXISTS disputes(
   id INTEGER PRIMARY KEY AUTOINCREMENT, code TEXT, case_id TEXT, step TEXT, text TEXT, ai_score INTEGER,
   status TEXT DEFAULT 'open', decision TEXT, new_score INTEGER, reason TEXT, resolved_by TEXT,
   created_at REAL, resolved_at REAL);
+CREATE TABLE IF NOT EXISTS exit_open(grp TEXT PRIMARY KEY, opened_by TEXT, opened_at REAL);
 CREATE TABLE IF NOT EXISTS teacher_groups(teacher TEXT NOT NULL, grp TEXT NOT NULL, PRIMARY KEY(teacher, grp));
 CREATE TABLE IF NOT EXISTS audit(id INTEGER PRIMARY KEY AUTOINCREMENT, actor TEXT, action TEXT, detail TEXT, ts REAL);
 """

@@ -16,7 +16,7 @@ export class ResearchTracker {
     this.api.event({ case_id: null, step: null, type, payload: { source: 'section', ...payload } }).catch(() => {})
   }
 
-  diagnostic(answers: (number | null)[], pct: Record<string, number>) {
-    this.api.diagnostic('A', answers, pct).catch(() => {})
+  diagnostic(variant: 'A' | 'B', answers: (number | null)[], pct: Record<string, number>) {
+    this.api.diagnostic(variant, answers, pct).catch(() => {})
   }
 }

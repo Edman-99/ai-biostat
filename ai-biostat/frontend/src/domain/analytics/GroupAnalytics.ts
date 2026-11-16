@@ -17,8 +17,10 @@ export interface GroupReport {
   /** типичные затруднения — самые слабые шаги */
   weakest: { key: string; pct: number }[]
   /** входная диагностика (среднее по тем, кто прошёл) и результат в кейсах, % */
-  competencies: { block: string; entry: number | null; cases: number | null }[]
+  competencies: { block: string; entry: number | null; exit: number | null; cases: number | null }[]
   diagnosticsDone: number
+  /** прошли итоговую диагностику (вариант Б) */
+  exitDone: number
   trainerPct: number | null
   trainerUsers: number
 }
@@ -52,9 +54,13 @@ export class GroupAnalytics {
     const steps = stepSuccess(sheets)
 
     const diags = people.map(p => data.diagnostics[p.code]).filter(Boolean)
+    const exits = people.map(p => data.exit?.[p.code]).filter((x): x is Record<string, number> => !!x)
+    const mean = (rows: Record<string, number>[], block: string) =>
+      avg(rows.map(d => d[block]).filter((v): v is number => typeof v === 'number'))
     const competencies = BLOCKS.map(block => ({
       block,
-      entry: avg(diags.map(d => d[block]).filter((v): v is number => typeof v === 'number')),
+      entry: mean(diags, block),
+      exit: mean(exits, block),
       cases: fromCases ? fromCases[block] : null,
     }))
 
@@ -72,6 +78,7 @@ export class GroupAnalytics {
       weakest: weakestSteps(steps),
       competencies,
       diagnosticsDone: diags.length,
+      exitDone: exits.length,
       trainerPct: avg(trainerPcts),
       trainerUsers: trainerPcts.length,
     }
