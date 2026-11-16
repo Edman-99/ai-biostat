@@ -55,7 +55,7 @@ export function PlayerScreen() {
   return (
     <CaseSessionContext.Provider value={session}>
       <TopBar>
-        <button className="btn ghost small" onClick={() => app.navigate('home')}>{t('player.backToHome', { id: def.id, title: shortTitle })}</button>
+        <button className="btn ghost small" onClick={() => app.navigate(app.getState().me?.role === 'teacher' ? 'teacher' : 'home')}>{t('player.backToHome', { id: def.id, title: shortTitle })}</button>
         <span className="small muted stepof">{t('player.stepOf', { n: progress.step })} · <span>{t(`player.save.${saveStatus}`)}</span></span>
       </TopBar>
       <div className="player">

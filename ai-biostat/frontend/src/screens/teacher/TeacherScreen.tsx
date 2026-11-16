@@ -1,6 +1,5 @@
-import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useServices } from '@/app/ServicesContext'
+import { useAppState, useServices } from '@/app/ServicesContext'
 import { AppShell } from '@/ui/AppShell'
 import { AnalyticsTab } from './AnalyticsTab'
 import { DiagnosticsTab } from './DiagnosticsTab'
@@ -14,13 +13,13 @@ const TABS: Tab[] = ['review', 'analytics', 'groups', 'editor', 'diag']
 
 export function TeacherScreen() {
   const { t } = useTranslation()
-  const { session } = useServices()
-  const [tab, setTab] = useState<Tab>('review')
+  const { app, session } = useServices()
+  const tab = (useAppState().teacherTab || 'review') as Tab
   const overview = useOverview()
   const openDisputes = overview.data?.disputes.length ?? 0
 
   const select = (k: string) => {
-    setTab(k as Tab)
+    app.setTeacherTab(k)
     if (k === 'review' || k === 'groups') overview.reload()
   }
 

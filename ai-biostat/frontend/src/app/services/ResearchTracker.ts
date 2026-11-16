@@ -5,7 +5,11 @@ import type { AppStore } from '../AppStore'
 export class ResearchTracker {
   constructor(private app: AppStore, private api: ResearchApi) {}
 
+  /** Преподаватель в предпросмотре кейса — не участник исследования, его действия не записываются. */
+  private skip() { return this.app.getState().me?.role === 'teacher' }
+
   track(type: 'step_enter' | 'code_run' | 'tutor_open', payload?: Record<string, unknown>) {
+    if (this.skip()) return
     const s = this.app.getState()
     const caseId = s.activeCaseId
     this.api.event({ case_id: caseId, step: this.app.caseProgress(caseId).step, type, payload }).catch(() => {})

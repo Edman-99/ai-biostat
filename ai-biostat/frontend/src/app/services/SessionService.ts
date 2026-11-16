@@ -4,6 +4,7 @@ import type { AppStore } from '../AppStore'
 import type { LanguageService } from './LanguageService'
 import type { DiagnosticEvaluator } from '@/domain/diagnostic/Diagnostic'
 import type { SavedState } from '@/domain/progress/types'
+import type { CaseEditsService } from './CaseEditsService'
 
 /** Вход, выход, восстановление сессии и профиль. */
 export class SessionService {
@@ -13,6 +14,7 @@ export class SessionService {
     private progress: ProgressApi,
     private lang: LanguageService,
     private diagnostic: DiagnosticEvaluator,
+    private caseEdits: CaseEditsService,
   ) {}
 
   /** Ответы старого демо (4 вопроса) не подходят к нынешней диагностике — её нужно пройти заново. */
@@ -26,7 +28,8 @@ export class SessionService {
     try {
       const me = await this.auth.me()
       this.lang.applyDefault(me.lang)
-      this.app.signIn(me, this.normalize(await this.progress.load()))
+      await this.caseEdits.load()
+    this.app.signIn(me, this.normalize(await this.progress.load()))
     } catch {
       this.app.navigate('login')
     }
@@ -35,6 +38,7 @@ export class SessionService {
   async login(code: string, password: string): Promise<void> {
     const me = await this.auth.login(code, password)
     this.lang.applyDefault(me.lang)
+    await this.caseEdits.load()
     this.app.signIn(me, this.normalize(await this.progress.load()))
   }
 

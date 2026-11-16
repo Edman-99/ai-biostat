@@ -1,7 +1,7 @@
 """AI-Biostat — сервер пилотной версии.
 Запуск:  uvicorn app.main:app --host 0.0.0.0 --port 8000
 """
-import csv, io, json, os, time
+import csv, io, json, os, re, time
 from fastapi import FastAPI, HTTPException, Request, Response, Depends
 from fastapi.responses import FileResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
@@ -307,6 +307,90 @@ def teachers(t=Depends(teacher)):
     require_admin(t)
     with db.connect() as con:
         return [{"code": c, "groups": g} for c, g in access.all_assignments(con).items()]
+
+
+# ---------- редактор кейсов: правки текстов поверх кейсов из кода ----------
+CASE_IDS = {"1", "4", "21", "22", "23"}
+REVIEW_STATUSES = ("draft", "biostat", "eduExpert", "published")
+EDIT_KEY = re.compile(r"^[a-z][A-Za-z]*(\.[A-Za-z0-9]+){0,3}$")   # путь поля, напр. method.options.2
+
+
+def _current_edits(con):
+    """Последняя правка по каждому (кейс, язык): {case_id: {lang: {путь: текст}}}."""
+    rows = con.execute("""SELECT e.case_id, e.lang, e.texts FROM case_edits e
+        JOIN (SELECT case_id, lang, MAX(id) AS id FROM case_edits GROUP BY case_id, lang) m ON m.id = e.id""").fetchall()
+    out = {}
+    for r in rows:
+        texts = _json(r["texts"], {})
+        if texts:
+            out.setdefault(r["case_id"], {})[r["lang"]] = texts
+    return out
+
+
+@app.get("/api/cases/edits")
+def case_edits(user=Depends(current)):
+    """Правки текстов кейсов — нужны всем, кто проходит кейсы (подставляются поверх исходного текста)."""
+    with db.connect() as con:
+        return _current_edits(con)
+
+
+@app.get("/api/teacher/cases")
+def cases_overview(t=Depends(teacher)):
+    with db.connect() as con:
+        stat = {r["case_id"]: dict(r) for r in con.execute(
+            "SELECT case_id, COUNT(*) AS saves, MAX(ts) AS last_ts FROM case_edits GROUP BY case_id")}
+        review = {r["case_id"]: dict(r) for r in con.execute("SELECT * FROM case_review")}
+    return [{"case_id": c, "saves": stat.get(c, {}).get("saves", 0), "last_ts": stat.get(c, {}).get("last_ts"),
+             "status": review.get(c, {}).get("status", "draft"), "note": review.get(c, {}).get("note") or "",
+             "status_by": review.get(c, {}).get("author"), "status_ts": review.get(c, {}).get("ts")}
+            for c in sorted(CASE_IDS, key=int)]
+
+
+@app.get("/api/teacher/cases/{case_id}/history")
+def case_history(case_id: str, t=Depends(teacher)):
+    with db.connect() as con:
+        rows = con.execute("SELECT id, lang, texts, author, ts FROM case_edits WHERE case_id=? ORDER BY id DESC LIMIT 200",
+                           (case_id,)).fetchall()
+    return [{"id": r["id"], "lang": r["lang"], "texts": _json(r["texts"], {}), "author": r["author"], "ts": r["ts"]} for r in rows]
+
+
+class CaseTexts(BaseModel):
+    texts: dict
+
+
+@app.put("/api/teacher/cases/{case_id}/{lang}")
+def save_case_texts(case_id: str, lang: str, body: CaseTexts, t=Depends(teacher)):
+    """Сохранить правки одного языка целиком (новая версия; {} — вернуть исходные тексты). Только главный преподаватель."""
+    require_admin(t)
+    if case_id not in CASE_IDS or lang not in participants.LANGS:
+        raise HTTPException(404, "Нет такого кейса или языка")
+    texts = body.texts
+    if len(texts) > 400 or any(not isinstance(k, str) or not EDIT_KEY.match(k) or not isinstance(v, str) or len(v) > 5000
+                               for k, v in texts.items()):
+        raise HTTPException(400, "Неверный формат правок")
+    with db.connect() as con:
+        con.execute("INSERT INTO case_edits(case_id, lang, texts, author, ts) VALUES(?,?,?,?,?)",
+                    (case_id, lang, json.dumps(texts, ensure_ascii=False), t["code"], time.time()))
+        db.audit(con, t["code"], "case_edit", {"case": case_id, "lang": lang, "fields": len(texts)})
+    return {"ok": True}
+
+
+class CaseReview(BaseModel):
+    status: str
+    note: str = ""
+
+
+@app.put("/api/teacher/case-status/{case_id}")
+def set_case_status(case_id: str, body: CaseReview, t=Depends(teacher)):
+    require_admin(t)
+    if case_id not in CASE_IDS or body.status not in REVIEW_STATUSES:
+        raise HTTPException(400, "Неверный кейс или статус")
+    with db.connect() as con:
+        con.execute("INSERT INTO case_review(case_id, status, note, author, ts) VALUES(?,?,?,?,?) ON CONFLICT(case_id) "
+                    "DO UPDATE SET status=excluded.status, note=excluded.note, author=excluded.author, ts=excluded.ts",
+                    (case_id, body.status, body.note[:2000], t["code"], time.time()))
+        db.audit(con, t["code"], "case_status", {"case": case_id, "status": body.status})
+    return {"ok": True}
 
 
 @app.get("/api/teacher/diagnostics")

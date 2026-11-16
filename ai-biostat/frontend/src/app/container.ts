@@ -24,6 +24,7 @@ import { ProgressSerializer } from './services/ProgressSerializer'
 import { ResearchTracker } from './services/ResearchTracker'
 import { LanguageService } from './services/LanguageService'
 import { SessionService } from './services/SessionService'
+import { CaseEditsService } from './services/CaseEditsService'
 import { ThemeService } from './services/ThemeService'
 
 export interface Services {
@@ -43,6 +44,7 @@ export interface Services {
   /** итоговая диагностика (вариант Б) */
   exitDiagnostic: DiagnosticEvaluator
   codeRunner: CodeRunner
+  caseEdits: CaseEditsService
   aiCheck: AiCheckEvaluator
   analytics: GroupAnalytics
 }
@@ -58,6 +60,7 @@ export function createServices(): Services {
   const language = new LanguageService(i18n)
   const aiCheck = new AiCheckEvaluator()
   const diagnostic = new DiagnosticEvaluator(DIAGNOSTIC_A, 'A')
+  const caseEdits = new CaseEditsService(http, cases)
   return {
     aiCheck,
     analytics: new GroupAnalytics(cases, scorer, aiCheck),
@@ -67,13 +70,14 @@ export function createServices(): Services {
     cases,
     scorer,
     grades,
-    session: new SessionService(app, new AuthApi(http), progressApi, language, diagnostic),
+    session: new SessionService(app, new AuthApi(http), progressApi, language, diagnostic, caseEdits),
     saver: new AutoSaver(app, progressApi, new ProgressSerializer(cases, scorer, grades)),
     research: new ResearchTracker(app, new ResearchApi(http)),
     disputes: new DisputesApi(http),
     teacher: new TeacherApi(http),
     debrief: new DebriefBuilder(),
     diagnostic,
+    caseEdits,
     exitDiagnostic: new DiagnosticEvaluator(DIAGNOSTIC_B, 'B'),
     // настоящий R/Python в браузере; если не загрузится — имитация с пометкой
     codeRunner: new BrowserCodeRunner({ Python: new PyodideEngine(), R: new WebREngine() }, new SimulatedCodeRunner()),

@@ -30,13 +30,15 @@ export interface AppState {
   trainer: Record<string, AiCheckAnswer>
   activeCaseId: string
   tutorOpen: boolean
+  /** вкладка панели преподавателя (сохраняется при выходе в предпросмотр кейса) */
+  teacherTab: string
 }
 
 const initial = (): AppState => ({
   screen: 'login', prevScreen: null, me: null,
   diag: { idx: 0, answers: [], done: false, pct: null },
   exit: { idx: 0, answers: [], done: false, pct: null },
-  cases: {}, trainer: {}, activeCaseId: '21', tutorOpen: false,
+  cases: {}, trainer: {}, activeCaseId: '21', tutorOpen: false, teacherTab: 'review',
 })
 
 /** Состояние приложения и все допустимые его изменения. Экраны не меняют состояние напрямую. */
@@ -75,6 +77,13 @@ export class AppStore extends Store<AppState> {
   closeProfile() { this.setState(s => ({ ...s, screen: s.prevScreen || 'home' })) }
 
   openCase(id: string) { this.setState(s => ({ ...s, activeCaseId: id, screen: 'player' })) }
+
+  setTeacherTab(tab: string) { this.setState(s => ({ ...s, teacherTab: tab })) }
+
+  /** Предпросмотр кейса преподавателем: все шаги открыты, ничего не сохраняется (AutoSaver не пишет за преподавателя). */
+  previewCase(id: string) {
+    this.setState(s => ({ ...s, activeCaseId: id, screen: 'player', cases: { ...s.cases, [id]: { ...newCaseProgress(), maxStep: 10 } } }))
+  }
 
   // ---------- диагностика: entry — входная (вариант А), exit — итоговая (вариант Б) ----------
   private patchDiag(kind: DiagKind, f: (d: DiagState) => Partial<DiagState>) {

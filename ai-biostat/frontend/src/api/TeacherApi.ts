@@ -1,5 +1,5 @@
 import type { HttpClient } from '@/core/http/HttpClient'
-import type { AnalyticsData, ExportKind, ImportResult, IssuedPassword, Lang, Overview, TeacherScope, DiagGroupStatus } from './types'
+import type { AnalyticsData, ExportKind, ImportResult, IssuedPassword, Lang, Overview, TeacherScope, DiagGroupStatus, CaseEditRow, CaseEditVersion, ReviewStatus } from './types'
 
 export class TeacherApi {
   constructor(private http: HttpClient) {}
@@ -10,6 +10,19 @@ export class TeacherApi {
 
   /** только главному преподавателю */
   teachers() { return this.http.get<TeacherScope[]>('/api/teacher/teachers') }
+
+  cases() { return this.http.get<CaseEditRow[]>('/api/teacher/cases') }
+
+  caseHistory(id: string) { return this.http.get<CaseEditVersion[]>(`/api/teacher/cases/${encodeURIComponent(id)}/history`) }
+
+  /** только главный преподаватель; {} — вернуть исходные тексты этого языка */
+  saveCaseTexts(id: string, lang: Lang, texts: Record<string, string>) {
+    return this.http.put<{ ok: boolean }>(`/api/teacher/cases/${encodeURIComponent(id)}/${lang}`, { texts })
+  }
+
+  setCaseStatus(id: string, status: ReviewStatus, note: string) {
+    return this.http.put<{ ok: boolean }>(`/api/teacher/case-status/${encodeURIComponent(id)}`, { status, note })
+  }
 
   diagnosticsStatus() { return this.http.get<DiagGroupStatus[]>('/api/teacher/diagnostics') }
 

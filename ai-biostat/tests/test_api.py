@@ -188,3 +188,27 @@ def test_exit_diagnostic_opened_per_group():
     assert t.post("/api/teacher/diagnostics/exit", json={"group": "E1", "open": False}).status_code == 200
     assert s1.get("/api/me").json()["exit_open"] is False
     assert admin.get("/api/teacher/export/diagnostics.csv").text.count("P-50") == 2
+
+
+def test_case_editor_texts_history_and_permissions():
+    make("P-60", "student"); make("T-60", "teacher"); make("T-61", "teacher", groups=("G1",))
+    s, admin, other = client("P-60"), client("T-60"), client("T-61")
+    assert s.get("/api/cases/edits").json() == {}
+    body = {"texts": {"situation.paragraphs.0": "Новый текст ситуации", "method.options.2": "χ²-критерий"}}
+    assert other.put("/api/teacher/cases/21/kk", json=body).status_code == 403          # не главный
+    assert s.put("/api/teacher/cases/21/kk", json=body).status_code == 403              # студент
+    assert admin.put("/api/teacher/cases/99/kk", json=body).status_code == 404
+    assert admin.put("/api/teacher/cases/21/xx", json=body).status_code == 404
+    assert admin.put("/api/teacher/cases/21/kk", json={"texts": {"bad key!": "x"}}).status_code == 400
+    assert admin.put("/api/teacher/cases/21/kk", json={"texts": {"a": 5}}).status_code == 400
+    assert admin.put("/api/teacher/cases/21/kk", json=body).status_code == 200
+    assert s.get("/api/cases/edits").json()["21"]["kk"]["method.options.2"] == "χ²-критерий"
+    assert admin.put("/api/teacher/cases/21/kk", json={"texts": {}}).status_code == 200   # вернуть исходное
+    assert "21" not in s.get("/api/cases/edits").json()
+    hist = admin.get("/api/teacher/cases/21/history").json()
+    assert len(hist) == 2 and hist[1]["texts"]["situation.paragraphs.0"] == "Новый текст ситуации"
+    assert other.put("/api/teacher/case-status/21", json={"status": "biostat"}).status_code == 403
+    assert admin.put("/api/teacher/case-status/21", json={"status": "nope"}).status_code == 400
+    assert admin.put("/api/teacher/case-status/21", json={"status": "biostat", "note": "отправлено 18.11"}).status_code == 200
+    row = [c for c in other.get("/api/teacher/cases").json() if c["case_id"] == "21"][0]
+    assert row["status"] == "biostat" and row["saves"] == 2 and row["note"] == "отправлено 18.11"

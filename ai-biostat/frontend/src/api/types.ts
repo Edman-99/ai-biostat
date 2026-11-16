@@ -33,6 +33,27 @@ export interface TeacherScope {
   groups: string[]
 }
 
+/** Редактор кейсов: строка списка (GET /api/teacher/cases) */
+export type ReviewStatus = 'draft' | 'biostat' | 'eduExpert' | 'published'
+export interface CaseEditRow {
+  case_id: string
+  saves: number
+  last_ts: number | null
+  status: ReviewStatus
+  note: string
+  status_by: string | null
+  status_ts: number | null
+}
+
+/** Одна сохранённая версия правок (история) */
+export interface CaseEditVersion {
+  id: number
+  lang: Lang
+  texts: Record<string, string>
+  author: string | null
+  ts: number
+}
+
 export type AttemptStatus = 'in_progress' | 'completed' | 'disputed' | 'confirmed'
 
 export interface OverviewPerson {

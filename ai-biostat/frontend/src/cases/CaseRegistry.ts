@@ -1,4 +1,5 @@
 import type { CaseDefinition } from '@/domain/cases/CaseDefinition'
+import { applyEdits, type AllCaseEdits, type CaseTextEdits } from '@/domain/cases/CaseEdits'
 import type { Localized } from '@/core/localized'
 import { buildCase01 } from './case01/case01'
 import { buildCase04 } from './case04/case04'
@@ -66,17 +67,34 @@ export interface CaseSource {
 /** Наполненные кейсы. Новый кейс = новый файл описания + одна строка здесь. */
 export class CaseRegistry {
   private sources = new Map<string, CaseSource>()
+  private originals = new Map<string, CaseDefinition>()
   private cache = new Map<string, CaseDefinition>()
+  private edits: AllCaseEdits = {}
 
   constructor(sources: CaseSource[]) { sources.forEach(s => this.sources.set(s.id, s)) }
 
+  /** Кейс на языке lang с правками преподавателя (редактор кейсов). */
   get(id: string, lang: Lang = 'ru'): CaseDefinition | undefined {
+    const key = `${id}|${lang}`
+    if (!this.cache.has(key)) {
+      const base = this.original(id, lang)
+      if (!base) return undefined
+      this.cache.set(key, applyEdits(base, this.edits[id]?.[lang]))
+    }
+    return this.cache.get(key)
+  }
+
+  /** Исходный кейс из кода, без правок (для редактора: «вернуть исходный текст»). */
+  original(id: string, lang: Lang = 'ru'): CaseDefinition | undefined {
     const src = this.sources.get(id)
     if (!src) return undefined
     const key = `${id}|${lang}`
-    if (!this.cache.has(key)) this.cache.set(key, src.build(lang))
-    return this.cache.get(key)
+    if (!this.originals.has(key)) this.originals.set(key, src.build(lang))
+    return this.originals.get(key)
   }
+
+  setEdits(edits: AllCaseEdits) { this.edits = edits; this.cache.clear() }
+  editsFor(id: string, lang: Lang): CaseTextEdits { return { ...(this.edits[id]?.[lang] ?? {}) } }
   has(id: string): boolean { return this.sources.has(id) }
   ids(): string[] { return [...this.sources.keys()] }
 }
