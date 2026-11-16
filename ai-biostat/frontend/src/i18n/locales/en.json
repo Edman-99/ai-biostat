@@ -70,7 +70,6 @@
  "diag": {
   "header": "Entry assessment · {{block}}",
   "counter": "Question {{n}} of {{total}}",
-  "fullNote": "(20 in the full version, variant A)",
   "note": "Correct answers are not shown — this is an assessment, not an exam. You can close it and come back to this question.",
   "answer": "Answer",
   "finish": "Finish assessment",

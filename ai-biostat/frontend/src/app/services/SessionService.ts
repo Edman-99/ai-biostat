@@ -2,6 +2,8 @@ import type { AuthApi } from '@/api/AuthApi'
 import type { ProgressApi } from '@/api/ProgressApi'
 import type { AppStore } from '../AppStore'
 import type { LanguageService } from './LanguageService'
+import type { DiagnosticEvaluator } from '@/domain/diagnostic/Diagnostic'
+import type { SavedState } from '@/domain/progress/types'
 
 /** Вход, выход, восстановление сессии и профиль. */
 export class SessionService {
@@ -10,14 +12,21 @@ export class SessionService {
     private auth: AuthApi,
     private progress: ProgressApi,
     private lang: LanguageService,
+    private diagnostic: DiagnosticEvaluator,
   ) {}
+
+  /** Ответы старого демо (4 вопроса) не подходят к нынешней диагностике — её нужно пройти заново. */
+  private normalize(saved: SavedState | null): SavedState | null {
+    if (!saved || !saved.diagDone || this.diagnostic.matches(saved.diagAns)) return saved
+    return { ...saved, diagAns: [], diagDone: false, pct: null }
+  }
 
   /** При открытии сайта: если cookie сессии жива — сразу в работу. */
   async restore(): Promise<void> {
     try {
       const me = await this.auth.me()
       this.lang.applyDefault(me.lang)
-      this.app.signIn(me, await this.progress.load())
+      this.app.signIn(me, this.normalize(await this.progress.load()))
     } catch {
       this.app.navigate('login')
     }
@@ -26,7 +35,7 @@ export class SessionService {
   async login(code: string, password: string): Promise<void> {
     const me = await this.auth.login(code, password)
     this.lang.applyDefault(me.lang)
-    this.app.signIn(me, await this.progress.load())
+    this.app.signIn(me, this.normalize(await this.progress.load()))
   }
 
   async logout(): Promise<void> {

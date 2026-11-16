@@ -20,7 +20,7 @@ export function DiagnosticScreen() {
       <main className="center" style={{ maxWidth: 620 }}>
         <div className="spread small muted">
           <span>{t('diag.header', { block: t(`blocks.${BLOCK_KEY[q.block]}`) })}</span>
-          <span>{t('diag.counter', { n: idx + 1, total: diagnostic.count })} <span className="muted">{t('diag.fullNote')}</span></span>
+          <span>{t('diag.counter', { n: idx + 1, total: diagnostic.count })}</span>
         </div>
         <ProgressBar pct={idx / diagnostic.count * 100} style={{ margin: '8px 0 22px' }} />
         <h2>{pick(q.question, lang)}</h2>
