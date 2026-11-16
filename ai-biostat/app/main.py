@@ -94,7 +94,12 @@ def _me(u):
     else:                                      # итоговая диагностика открыта для группы студента?
         with db.connect() as con:
             out["exit_open"] = _exit_open(con, u["grp"])
+            out["survey_open"] = _survey_open(con, u["grp"])
     return out
+
+
+def _survey_open(con, grp) -> bool:
+    return bool(grp) and con.execute("SELECT 1 FROM survey_open WHERE grp=?", (grp,)).fetchone() is not None
 
 
 def _exit_open(con, grp) -> bool:
@@ -308,6 +313,85 @@ def teachers(t=Depends(teacher)):
     require_admin(t)
     with db.connect() as con:
         return [{"code": c, "groups": g} for c, g in access.all_assignments(con).items()]
+
+
+# ---------- опросник обратной связи ----------
+SURVEY_KEY = re.compile(r"^[a-z][a-z0-9_]{0,39}$")
+
+
+def sus_score(answers: dict):
+    """SUS (System Usability Scale): sus1..sus10 по шкале 1–5 → 0–100; None, если ответов не хватает."""
+    vals = [answers.get(f"sus{i}") for i in range(1, 11)]
+    if any(not isinstance(v, int) or not 1 <= v <= 5 for v in vals):
+        return None
+    return sum((v - 1) if i % 2 == 0 else (5 - v) for i, v in enumerate(vals)) * 2.5
+
+
+class SurveyIn(BaseModel):
+    answers: dict
+
+
+@app.get("/api/survey/mine")
+def survey_mine(user=Depends(current)):
+    with db.connect() as con:
+        r = con.execute("SELECT answers, sus, ts FROM survey_responses WHERE code=?", (user["code"],)).fetchone()
+    return {"done": bool(r), "sus": r["sus"] if r else None, "ts": r["ts"] if r else None}
+
+
+@app.post("/api/survey")
+def survey_submit(body: SurveyIn, user=Depends(current)):
+    """Анкета обратной связи. Студенту/специалисту — когда преподаватель открыл её группе; преподавателю — всегда.
+    Повторная отправка заменяет ответы. Балл SUS считает сервер."""
+    a = body.answers
+    if user["role"] != "teacher":
+        with db.connect() as con:
+            if not _survey_open(con, user["grp"]):
+                raise HTTPException(403, "Опросник ещё не открыт для вашей группы")
+    if not a or len(a) > 80 or any(not isinstance(k, str) or not SURVEY_KEY.match(k) for k in a) or any(
+            not ((isinstance(v, int) and not isinstance(v, bool) and 0 <= v <= 5) or (isinstance(v, str) and len(v) <= 2000))
+            for v in a.values()):
+        raise HTTPException(400, "Неверный формат ответов")
+    sus = sus_score(a)
+    with db.connect() as con:
+        con.execute("INSERT INTO survey_responses(code, role, grp, answers, sus, ts) VALUES(?,?,?,?,?,?) ON CONFLICT(code) "
+                    "DO UPDATE SET answers=excluded.answers, sus=excluded.sus, ts=excluded.ts",
+                    (user["code"], user["role"], user["grp"], json.dumps(a, ensure_ascii=False), sus, time.time()))
+    return {"ok": True, "sus": sus}
+
+
+@app.get("/api/teacher/survey")
+def survey_status(t=Depends(teacher)):
+    """По группам преподавателя: сколько ответили, средний SUS, открыт ли опросник."""
+    cond, args = access.group_filter(t["scope"], "p.grp")
+    with db.connect() as con:
+        rows = con.execute(f"""SELECT p.grp, COUNT(*) AS people, COUNT(r.code) AS done, ROUND(AVG(r.sus), 1) AS sus_avg,
+              EXISTS(SELECT 1 FROM survey_open o WHERE o.grp=p.grp) AS open
+            FROM participants p LEFT JOIN survey_responses r ON r.code=p.code
+            WHERE p.role!='teacher' AND p.active=1 AND COALESCE(p.grp,'')!='' AND {cond}
+            GROUP BY p.grp ORDER BY p.grp""", args).fetchall()
+        mine = con.execute("SELECT sus FROM survey_responses WHERE code=?", (t["code"],)).fetchone()
+    return {"groups": [dict(r) | {"open": bool(r["open"])} for r in rows], "mine_done": bool(mine)}
+
+
+class SurveyToggle(BaseModel):
+    group: str
+    open: bool
+
+
+@app.post("/api/teacher/survey/open")
+def survey_toggle(body: SurveyToggle, t=Depends(teacher)):
+    group = body.group.strip()
+    if t["scope"] is not None and group not in t["scope"]:
+        raise HTTPException(403, "Группа не закреплена за вами")
+    with db.connect() as con:
+        if not con.execute("SELECT 1 FROM participants WHERE grp=? AND role!='teacher'", (group,)).fetchone():
+            raise HTTPException(404, "Такой группы нет")
+        if body.open:
+            con.execute("INSERT OR IGNORE INTO survey_open(grp, opened_by, opened_at) VALUES(?,?,?)", (group, t["code"], time.time()))
+        else:
+            con.execute("DELETE FROM survey_open WHERE grp=?", (group,))
+        db.audit(con, t["code"], "survey_open" if body.open else "survey_close", group)
+    return {"ok": True}
 
 
 # ---------- ИИ-репетитор ----------
@@ -590,6 +674,27 @@ EXPORTS = {
     "disputes": "SELECT code, case_id, step, ai_score, status, decision, new_score, reason, created_at, resolved_at FROM disputes",
     "tutor": "SELECT code, case_id, step, role, content, input_tokens, output_tokens, ts FROM tutor_messages",
 }
+
+
+@app.get("/api/teacher/export/survey.csv")
+def export_survey(t=Depends(teacher)):
+    """Опросник: одна строка на участника, ответы — по столбцам (код вопроса), SUS посчитан. Только коды.
+    Ответы преподавателей видит только главный."""
+    vis, vargs = _visible(t)
+    with db.connect() as con:
+        rows = con.execute(f"SELECT code, role, grp, sus, ts, answers FROM survey_responses WHERE {vis} ORDER BY role, grp, code",
+                           vargs).fetchall()
+        db.audit(con, t["code"], "export", "survey")
+    parsed = [(r, _json(r["answers"], {})) for r in rows]
+    keys = sorted({k for _, a in parsed for k in a}, key=lambda k: (k.startswith("open"), k))
+    buf = io.StringIO()
+    buf.write("\ufeff")
+    w = csv.writer(buf, delimiter=";")
+    w.writerow(["code", "role", "group", "sus", "ts", *keys])
+    for r, a in parsed:
+        w.writerow([r["code"], r["role"], r["grp"] or "", r["sus"] if r["sus"] is not None else "", r["ts"], *[a.get(k, "") for k in keys]])
+    return StreamingResponse(iter([buf.getvalue()]), media_type="text/csv; charset=utf-8",
+                             headers={"Content-Disposition": 'attachment; filename="ai-biostat-survey.csv"'})
 
 
 @app.get("/api/teacher/export/{kind}.csv")

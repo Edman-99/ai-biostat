@@ -7,9 +7,10 @@ import { EditorTab } from './EditorTab'
 import { ParticipantsTab } from './ParticipantsTab'
 import { ReviewTab } from './ReviewTab'
 import { useOverview } from './useOverview'
+import { SurveyTab } from './SurveyTab'
 
-type Tab = 'review' | 'analytics' | 'groups' | 'editor' | 'diag'
-const TABS: Tab[] = ['review', 'analytics', 'groups', 'editor', 'diag']
+type Tab = 'review' | 'analytics' | 'groups' | 'editor' | 'diag' | 'survey'
+const TABS: Tab[] = ['review', 'analytics', 'groups', 'editor', 'diag', 'survey']
 
 export function TeacherScreen() {
   const { t } = useTranslation()
@@ -39,6 +40,7 @@ export function TeacherScreen() {
       {tab === 'editor' && <EditorTab />}
       {tab === 'diag' && <DiagnosticsTab />}
       {tab === 'groups' && <ParticipantsTab overview={overview} />}
+      {tab === 'survey' && <SurveyTab />}
     </AppShell>
   )
 }

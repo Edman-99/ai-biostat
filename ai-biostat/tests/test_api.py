@@ -238,3 +238,31 @@ def test_tutor_chat_saved_blocked_and_limited(monkeypatch):
     monkeypatch.setattr(tutor, "DAILY_LIMIT", 1)
     assert s.post("/api/tutor", json=body).status_code == 429
     assert s.get("/api/tutor/status").json()["left"] == 0
+
+
+def test_survey_open_submit_sus_and_export():
+    from app.main import sus_score
+    best = {f"sus{i}": (5 if i % 2 else 1) for i in range(1, 11)}
+    assert sus_score(best) == 100.0 and sus_score({f"sus{i}": 3 for i in range(1, 11)}) == 50.0
+    assert sus_score({"sus1": 5}) is None
+    make("P-80", "student", grp="S1"); make("P-81", "student", grp="S2")
+    make("T-80", "teacher", groups=("S1",)); make("T-81", "teacher")
+    s1, s2, t, admin = client("P-80"), client("P-81"), client("T-80"), client("T-81")
+    ans = {**best, "part_cases": 5, "part_tutor": 0, "self_method_before": 2, "self_method_now": 4, "open_liked": "Кейсы; удобно"}
+    assert s1.get("/api/me").json()["survey_open"] is False
+    assert s1.post("/api/survey", json={"answers": ans}).status_code == 403            # ещё закрыт
+    assert t.post("/api/teacher/survey/open", json={"group": "S2", "open": True}).status_code == 403
+    assert t.post("/api/teacher/survey/open", json={"group": "S1", "open": True}).status_code == 200
+    assert s1.get("/api/me").json()["survey_open"] is True
+    assert s1.post("/api/survey", json={"answers": {"sus1": 9}}).status_code == 400
+    assert s1.post("/api/survey", json={"answers": {"Bad Key": 1}}).status_code == 400
+    r = s1.post("/api/survey", json={"answers": ans}); assert r.status_code == 200 and r.json()["sus"] == 100.0
+    assert s1.get("/api/survey/mine").json()["done"] is True
+    assert s2.post("/api/survey", json={"answers": ans}).status_code == 403
+    assert t.post("/api/survey", json={"answers": {**best, "open_liked": "панель"}}).status_code == 200   # преподавателю всегда
+    st = t.get("/api/teacher/survey").json()
+    assert [g["grp"] for g in st["groups"]] == ["S1"] and st["groups"][0]["done"] == 1 and st["groups"][0]["sus_avg"] == 100.0
+    assert st["mine_done"] is True
+    csv_t = t.get("/api/teacher/export/survey.csv").text
+    assert "P-80" in csv_t and "T-80" not in csv_t and "self_method_now" in csv_t and "Кейсы; удобно" in csv_t
+    assert "T-80" in admin.get("/api/teacher/export/survey.csv").text           # ответы преподавателей — главному

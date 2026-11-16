@@ -22,6 +22,8 @@ CREATE TABLE IF NOT EXISTS disputes(
   id INTEGER PRIMARY KEY AUTOINCREMENT, code TEXT, case_id TEXT, step TEXT, text TEXT, ai_score INTEGER,
   status TEXT DEFAULT 'open', decision TEXT, new_score INTEGER, reason TEXT, resolved_by TEXT,
   created_at REAL, resolved_at REAL);
+CREATE TABLE IF NOT EXISTS survey_open(grp TEXT PRIMARY KEY, opened_by TEXT, opened_at REAL);
+CREATE TABLE IF NOT EXISTS survey_responses(code TEXT PRIMARY KEY, role TEXT, grp TEXT, answers TEXT NOT NULL, sus REAL, ts REAL);
 CREATE TABLE IF NOT EXISTS tutor_messages(
   id INTEGER PRIMARY KEY AUTOINCREMENT, code TEXT NOT NULL, case_id TEXT, step INTEGER, role TEXT NOT NULL,
   content TEXT NOT NULL, input_tokens INTEGER, output_tokens INTEGER, ts REAL);

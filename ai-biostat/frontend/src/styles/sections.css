@@ -213,3 +213,13 @@ h1.serif{font-size:34px; line-height:1.15}
 .chat .ask .btn{min-width:44px}
 .tutor-page-chat{padding:0; height:600px; display:flex; flex-direction:column; overflow:hidden}
 @media (max-width:1100px){ .tutor-page-chat{height:520px} }
+
+/* опросник */
+.survey-sec{margin-bottom:16px}
+.survey-item{padding:12px 0; border-top:1px solid var(--line-2)}
+.survey-item.missing .survey-q{color:var(--bad)}
+.survey-q{margin:0 0 8px}
+.scale-row{display:flex; flex-wrap:wrap; gap:8px 12px; align-items:center}
+.scale-row .seg button{min-width:44px}
+.prepost{display:grid; grid-template-columns:auto 1fr; gap:8px 12px; align-items:center}
+@media (max-width:600px){ .prepost{grid-template-columns:1fr} .scale-row > span{flex:1 1 40%} }

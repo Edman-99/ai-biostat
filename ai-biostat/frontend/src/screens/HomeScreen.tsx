@@ -10,6 +10,7 @@ import { Note, ProgressBar } from '@/ui/common'
 import { LearnerShell } from './LearnerShell'
 import { useCaseResults } from './useCaseResults'
 import { ExitInvite } from './DiagnosticResultScreen'
+import { SurveyInvite } from './SurveyScreen'
 
 const ROUTE: { key: string; icon: string; to: Screen }[] = [
   { key: 'diag', icon: '⌁', to: 'diagres' },
@@ -57,6 +58,7 @@ export function HomeScreen() {
       </section>
 
       <ExitInvite />
+      <SurveyInvite />
       <div style={{ marginTop: 26 }}>
         <h2>{me?.first_name ? t('home.helloName', { name: me.first_name }) : t('home.hello')}</h2>
         <p className="muted">{me?.code} · {roleWord}{me?.group ? ` · ${t('common.group', { group: me.group })}` : ''}</p>

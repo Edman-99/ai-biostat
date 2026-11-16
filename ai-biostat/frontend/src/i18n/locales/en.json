@@ -324,7 +324,8 @@
    "editor": "Case editor",
    "diag": "Assessment",
    "groups": "Participants & export",
-   "analytics": "Analytics"
+   "analytics": "Analytics",
+   "survey": "Survey"
   },
   "review": {
    "intro": "Disputed scores first. A dispute does not block the student; they will see the decision and its justification.",
@@ -523,6 +524,21 @@
    "allGroups": "all groups (lead)",
    "noGroups": "no groups",
    "howTo": "New teachers are created and assigned groups by the system administrator."
+  },
+  "surveyTab": {
+   "eyebrow": "Feedback",
+   "intro": "Open the survey (SUS usability, course parts, before/now self-assessment, open questions) for a group at the end of the pilot. Students will see an invitation on their home page.",
+   "export": "Survey answers",
+   "answered": "Answered",
+   "sus": "Mean SUS (0–100)",
+   "openBtn": "Open survey",
+   "myTitle": "Your teacher questionnaire",
+   "myLead": "Rate the usability of the panel and its sections — about 3 minutes.",
+   "myDone": "You have answered. You can change your answers.",
+   "myStart": "Fill in",
+   "myAgain": "Change answers",
+   "back": "Back",
+   "note": "SUS of 68 or more means above-average usability, 80 or more is good. The export has answers by column and the SUS score for each participant."
   }
  },
  "nav": {
@@ -744,5 +760,37 @@
   "compLead": "Average of the entry diagnostic (completed: {{n}}) and of case results.",
   "footer": "Final grading remains with the teacher. Data export for the study is in the «Participants and export» tab.",
   "compExit": "Took the final one: {{n}} — the bars show “entry → final”."
+ },
+ "survey": {
+  "eyebrow": "Feedback",
+  "title": "Course survey",
+  "inviteTitle": "Your teacher has opened the course survey",
+  "inviteText": "About 5 minutes. Your answers help improve the course; they are stored only by participant code.",
+  "start": "Take the survey",
+  "lead": "Please answer honestly — there are no right or wrong answers. Answers are stored only by participant code.",
+  "section": {
+   "sus": "Ease of use",
+   "parts": "Parts of the course",
+   "self": "Your skills: before the course and now",
+   "open": "Your opinion"
+  },
+  "hint": {
+   "sus": "1 — strongly disagree, 5 — strongly agree.",
+   "parts": "How useful was each part: 1 — not useful at all, 5 — very useful. “—” — did not use it.",
+   "self": "Rate yourself from 1 to 5: your level before the course and now.",
+   "open": "Optional, but very valuable to us."
+  },
+  "disagree": "disagree",
+  "agree": "agree",
+  "poor": "not useful",
+  "excellent": "very useful",
+  "na": "—",
+  "before": "Before",
+  "now": "Now",
+  "submit": "Submit answers",
+  "fillAll": "Please answer all choice questions (not answered: {{n}}).",
+  "privacy": "Answers are seen only by teachers in aggregate and by the study author (by code, without names).",
+  "thanks": "Thank you! Your answers have been saved.",
+  "closed": "The survey is closed for now — your teacher will open it at the end of the course."
  }
 }

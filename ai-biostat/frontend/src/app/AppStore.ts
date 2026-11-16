@@ -4,7 +4,7 @@ import { newCaseProgress, type CaseProgress, type Level, type SavedState } from 
 import type { AiCheckAnswer } from '@/domain/aicheck/AiCheckTrainer'
 
 export type Screen = 'login' | 'diag' | 'diagres' | 'home' | 'player' | 'teacher' | 'profile'
-  | 'cases' | 'tutor' | 'analysis' | 'aicheck' | 'progress' | 'exitdiag'
+  | 'cases' | 'tutor' | 'analysis' | 'aicheck' | 'progress' | 'exitdiag' | 'survey'
 
 export type DiagKind = 'entry' | 'exit'
 

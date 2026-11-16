@@ -16,6 +16,8 @@ export interface User {
   scope?: string[] | null
   /** только у студента/специалиста: итоговая диагностика открыта для его группы */
   exit_open?: boolean
+  /** только у студента/специалиста: опросник обратной связи открыт для его группы */
+  survey_open?: boolean
 }
 
 /** GET /api/teacher/diagnostics — по группам преподавателя */

@@ -13,6 +13,7 @@ import { TutorScreen } from '@/screens/TutorScreen'
 import { AnalysisScreen } from '@/screens/AnalysisScreen'
 import { AiCheckScreen } from '@/screens/AiCheckScreen'
 import { ProgressScreen } from '@/screens/ProgressScreen'
+import { SurveyScreen } from '@/screens/SurveyScreen'
 
 const SCREENS: Record<Screen, ComponentType> = {
   login: LoginScreen,
@@ -26,6 +27,7 @@ const SCREENS: Record<Screen, ComponentType> = {
   analysis: AnalysisScreen,
   aicheck: AiCheckScreen,
   progress: ProgressScreen,
+  survey: SurveyScreen,
   player: PlayerScreen,
   teacher: TeacherScreen,
 }
