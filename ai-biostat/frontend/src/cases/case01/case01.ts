@@ -1,6 +1,7 @@
 import type { Lang } from '@/api/types'
 import type { CaseDefinition, Pattern } from '@/domain/cases/CaseDefinition'
 import { int, rng, shuffledUnits } from '../shared/synthetic'
+import { toCsv } from '@/domain/analysis/Dataset'
 
 /**
  * Кейс 1. Вспышка кори: оценка 7-1-7. Доли, 95% ДИ (точный, Клоппер–Пирсон), критерий Мак-Немара.
@@ -13,7 +14,7 @@ const REGION: Record<Lang, (x: string) => string> = {
   ru: x => `Регион ${x}`, kk: x => `${x} өңірі`, en: x => `Region ${x}`,
 }
 
-export function generateCase01Rows(lang: Lang = 'ru') {
+export function generateCase01Rows(lang: Lang = 'ru', dirty = true) {
   const R = rng(101)
   const units = shuffledUnits<[number, number]>(R, [[[1, 1], 30], [[1, 0], 18], [[0, 1], 6], [[0, 0], 10]])
   const rows = units.map(([n, r], i) => ({
@@ -25,6 +26,7 @@ export function generateCase01Rows(lang: Lang = 'ru') {
     notify_ok: n,
     respond_ok: r,
   }))
+  if (!dirty) return rows
   // «грязь» для шага 2
   rows[2].detect_days = 700
   rows[6].notify_days = -1
@@ -263,6 +265,7 @@ export function buildCase01(lang: Lang): CaseDefinition {
       errors: T.dataErrors,
       retryHint: T.retryHint,
       allFoundNote: T.allFoundNote,
+      csv: () => toCsv(['id', 'region', 'detect_days', 'notify_days', 'respond_days', 'notify_ok', 'respond_ok'], generateCase01Rows(lang, false)),
     },
     variables: [
       { key: 'id', label: T.variables.id, expected: 'id' },

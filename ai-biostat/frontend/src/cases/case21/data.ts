@@ -45,7 +45,7 @@ function rng(seed: number) {
   return () => { seed = (seed * 1664525 + 1013904223) % 4294967296; return seed / 4294967296 }
 }
 
-export function generateCase21Rows(lang: Lang = 'ru'): Case21Row[] {
+export function generateCase21Rows(lang: Lang = 'ru', dirty = true): Case21Row[] {
   const L = CASE21_LABELS[lang]
   const R = rng(21)
   const groups: [EmpKey, number, number][] = [['self', 156, 30], ['home', 70, 21], ['wage', 94, 6]]
@@ -64,6 +64,7 @@ export function generateCase21Rows(lang: Lang = 'ru'): Case21Row[] {
     const vl = r.sup ? Math.round(R() * 39) : Math.round(Math.exp(4 + R() * 7))
     return { id: i + 1, age, sex, emp: L.emp[r.emp], vl, sup: r.sup ? L.yes : L.no }
   })
+  if (!dirty) return rows
   // «грязь» для шага 2
   rows[3].age = 230
   rows[8].vl = -35

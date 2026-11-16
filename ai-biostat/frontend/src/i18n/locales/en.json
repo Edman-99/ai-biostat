@@ -207,8 +207,8 @@
  },
  "step6": {
   "title": "Step 6. Analysis in R or Python",
-  "introPost": "Write the analysis code yourself. The tutor can help with reference.",
-  "introPre": "Fill in the blanks in the template and run the code.",
+  "introPost": "Write the analysis code yourself — it really runs, right in your browser. The case data file is already attached.",
+  "introPre": "Fill in the blanks in the template and run the code — it really runs, right in your browser.",
   "lang": "Language",
   "phoneOnly": "Only Python is available on a phone",
   "phoneNote": "Only Python is available on a phone. We recommend a computer for this step: both R and Python are available there and coding is easier. Your work is saved — you can continue on a computer.",
@@ -224,10 +224,15 @@
    "Running code",
    "Building the result"
   ],
-  "error": "Execution error.",
+  "error": "Error:",
   "explain": "Explain the error",
   "otherLang": "The other language ({{lang}}) opens for comparison after the case is finished.",
-  "why": "The code must run without errors"
+  "why": "The code must run without errors",
+  "loadingPython": "Loading Python into your browser. The first time takes up to a minute, after that a few seconds.",
+  "loadingR": "Loading R into your browser. The first time takes 1–2 minutes (a computer and internet are needed), after that a few seconds.",
+  "wrongAnalysis": "The code ran, but it does not analyse what the case question needs: check which variables and which method you use.",
+  "timeout": "The code ran too long and was stopped. Check for an infinite loop and run it again.",
+  "simulatedNote": "R/Python could not be loaded (check your internet) — a pre-computed result is shown. The step is counted."
  },
  "step7": {
   "title": "Step 7. Interpretation",

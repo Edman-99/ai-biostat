@@ -1,6 +1,7 @@
 import type { Lang } from '@/api/types'
 import type { CaseDefinition, Pattern } from '@/domain/cases/CaseDefinition'
 import { int, rng, shuffledUnits } from '../shared/synthetic'
+import { toCsv } from '@/domain/analysis/Dataset'
 
 /**
  * Кейс 23. Пропуск приёма АРТ и вирусная супрессия: сравнение двух независимых долей, разность долей с 95% ДИ.
@@ -11,7 +12,7 @@ import { int, rng, shuffledUnits } from '../shared/synthetic'
  */
 const SEX: Record<Lang, { m: string; f: string }> = { ru: { m: 'М', f: 'Ж' }, kk: { m: 'Е', f: 'Ә' }, en: { m: 'M', f: 'F' } }
 
-export function generateCase23Rows(lang: Lang = 'ru') {
+export function generateCase23Rows(lang: Lang = 'ru', dirty = true) {
   const R = rng(2323)
   const units = shuffledUnits<[number, number]>(R, [[[0, 1], 150], [[0, 0], 20], [[1, 1], 46], [[1, 0], 24]])
   const rows = units.map(([missed, sup], i) => ({
@@ -22,6 +23,7 @@ export function generateCase23Rows(lang: Lang = 'ru') {
     viral_load: sup ? Math.round(R() * 39) : Math.round(Math.exp(4 + R() * 6)),
     vl_suppressed: sup,
   }))
+  if (!dirty) return rows
   // «грязь» для шага 2
   rows[4].age = 340
   rows[7].missed_doses = 2
@@ -260,6 +262,7 @@ export function buildCase23(lang: Lang): CaseDefinition {
       errors: T.dataErrors,
       retryHint: T.retryHint,
       allFoundNote: T.allFoundNote,
+      csv: () => toCsv(['id', 'age', 'sex', 'missed_doses', 'viral_load', 'vl_suppressed'], generateCase23Rows(lang, false)),
     },
     variables: [
       { key: 'id', label: T.variables.id, expected: 'id' },
@@ -286,7 +289,8 @@ export function buildCase23(lang: Lang): CaseDefinition {
           'k, n = g.sum(), g.count()',
           'print(k / n)',
           'print(proportions_ztest(k, n))',
-          'print(confint_proportions_2indep(k[0], n[0], k[1], n[1], method="wald"))',
+          '(k0, k1), (n0, n1) = k.tolist(), n.tolist()',
+          'print(confint_proportions_2indep(k0, n0, k1, n1, method="wald"))',
         ],
       },
       blankAnswers: ['missed_doses', 'vl_suppressed'],

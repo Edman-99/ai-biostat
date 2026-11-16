@@ -1,6 +1,7 @@
 import type { Lang } from '@/api/types'
 import type { CaseDefinition, Pattern } from '@/domain/cases/CaseDefinition'
 import { int, rng, shuffledUnits } from '../shared/synthetic'
+import { toCsv } from '@/domain/analysis/Dataset'
 
 /**
  * Кейс 22 (специалисты). Стадия ВИЧ-инфекции и вирусная супрессия: регрессия Пуассона с робастными (HC0)
@@ -13,7 +14,7 @@ const SEX: Record<Lang, { m: string; f: string; bad: string }> = {
   ru: { m: 'М', f: 'Ж', bad: 'M (лат.)' }, kk: { m: 'Е', f: 'Ә', bad: 'E (лат.)' }, en: { m: 'M', f: 'F', bad: 'male' },
 }
 
-export function generateCase22Rows(lang: Lang = 'ru') {
+export function generateCase22Rows(lang: Lang = 'ru', dirty = true) {
   const R = rng(2222)
   const units = shuffledUnits<[number, number]>(R, [
     [[1, 1], 72], [[1, 0], 8], [[2, 1], 72], [[2, 0], 18], [[3, 1], 56], [[3, 0], 24], [[4, 1], 25], [[4, 0], 25],
@@ -26,6 +27,7 @@ export function generateCase22Rows(lang: Lang = 'ru') {
     viral_load: sup ? Math.round(R() * 39) : Math.round(Math.exp(4 + R() * 7)),
     vl_suppressed: sup,
   }))
+  if (!dirty) return rows
   // «грязь» для шага 2 (строка 9: нагрузка противоречит отметке о супрессии)
   rows[1].stage = 5
   rows[8].viral_load = rows[8].vl_suppressed ? 15000 : 12
@@ -264,6 +266,7 @@ export function buildCase22(lang: Lang): CaseDefinition {
       errors: T.dataErrors,
       retryHint: T.retryHint,
       allFoundNote: T.allFoundNote,
+      csv: () => toCsv(['id', 'age', 'sex', 'stage', 'viral_load', 'vl_suppressed'], generateCase22Rows(lang, false)),
     },
     variables: [
       { key: 'id', label: T.variables.id, expected: 'id' },
@@ -278,7 +281,7 @@ export function buildCase22(lang: Lang): CaseDefinition {
     code: {
       templates: {
         R: [
-          'library(sandwich); library(lmtest)',
+          'suppressPackageStartupMessages({ library(sandwich); library(lmtest) })',
           'd <- read.csv("case22_hiv_stage.csv")',
           'd$stage <- factor(d$stage)',
           'm <- glm([1] ~ [0], data = d, family = poisson)',

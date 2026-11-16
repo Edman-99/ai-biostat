@@ -32,6 +32,10 @@ export interface CaseProgress {
   ran: boolean
   shown: boolean             // показан готовый код (−5)
   codeErr: string
+  /** вывод последнего успешного запуска (с v0.14.0; в старых записях нет — показывается эталонный вывод) */
+  out?: string
+  /** результат получен имитацией (R/Python не загрузились) */
+  simulated?: boolean
   interp: string
   frag: number | null
   fix: string

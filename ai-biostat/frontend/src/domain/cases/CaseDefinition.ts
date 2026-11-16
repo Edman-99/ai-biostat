@@ -43,6 +43,8 @@ export interface CaseDefinition {
     errors: Record<number, string>
     retryHint: string
     allFoundNote: string
+    /** полный набор данных CSV без «грязи» шага 2 — его получает код студента на шаге 6 (файл fileName) */
+    csv?: () => string
   }
 
   variables: CaseVariable[]

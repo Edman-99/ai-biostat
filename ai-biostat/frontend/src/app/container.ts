@@ -11,6 +11,9 @@ import { DebriefBuilder } from '@/domain/scoring/DebriefBuilder'
 import { DiagnosticEvaluator } from '@/domain/diagnostic/Diagnostic'
 import { DIAGNOSTIC_A, DIAGNOSTIC_B } from '@/domain/diagnostic/questions'
 import { SimulatedCodeRunner } from '@/domain/code/SimulatedCodeRunner'
+import { BrowserCodeRunner } from '@/domain/code/BrowserCodeRunner'
+import { PyodideEngine } from '@/core/runtime/PyodideEngine'
+import { WebREngine } from '@/core/runtime/WebREngine'
 import type { CodeRunner } from '@/domain/code/CodeRunner'
 import { AiCheckEvaluator } from '@/domain/aicheck/AiCheckTrainer'
 import { GroupAnalytics } from '@/domain/analytics/GroupAnalytics'
@@ -72,6 +75,7 @@ export function createServices(): Services {
     debrief: new DebriefBuilder(),
     diagnostic,
     exitDiagnostic: new DiagnosticEvaluator(DIAGNOSTIC_B, 'B'),
-    codeRunner: new SimulatedCodeRunner(),
+    // настоящий R/Python в браузере; если не загрузится — имитация с пометкой
+    codeRunner: new BrowserCodeRunner({ Python: new PyodideEngine(), R: new WebREngine() }, new SimulatedCodeRunner()),
   }
 }

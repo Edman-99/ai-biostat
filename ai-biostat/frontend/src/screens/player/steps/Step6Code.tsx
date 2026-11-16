@@ -53,15 +53,25 @@ export function Step6Code() {
   // На телефоне WebR не работает — только Python
   useEffect(() => { if (phone && c.lang === 'R') patch({ lang: 'Python', ran: false }) }, [phone, c.lang, patch])
 
+  const [loading, setLoading] = useState(false)
+  // вывод неудачного запуска (ошибка или «не тот анализ») — только на экране, в прогресс не сохраняется
+  const [failOut, setFailOut] = useState('')
+
   const run = async () => {
     patch(p => ({ runs: p.runs + 1, codeErr: '', ran: false }))
+    setFailOut('')
     const result = await codeRunner.run(
       { def, lang: c.lang, mode: freeMode ? 'free' : 'template', blanks: c.blanks, code: c.free },
-      setRunning,
+      setRunning, info => setLoading(info === 'loading'),
     )
-    setRunning(-1)
-    research.track('code_run', { lang: c.lang, ok: result.ok })
-    patch(result.ok ? { ran: true } : { codeErr: result.error })
+    setRunning(-1); setLoading(false)
+    research.track('code_run', { lang: c.lang, ok: result.ok, kind: result.ok ? 'ok' : result.kind, simulated: !!result.simulated })
+    if (result.ok) { patch({ ran: true, out: result.output, simulated: !!result.simulated }); return }
+    setFailOut(result.output?.trim() ?? '')
+    const message = result.kind === 'wrong' ? t('step6.wrongAnalysis')
+      : result.kind === 'timeout' ? t('step6.timeout')
+        : result.error
+    patch({ codeErr: message })
   }
 
   const showCode = () => patch({ shown: true, blanks: [...def.code.blankAnswers], codeErr: '' })
@@ -75,7 +85,7 @@ export function Step6Code() {
           {(['R', 'Python'] as CodeLang[]).map(l => (
             <button key={l} aria-pressed={c.lang === l} disabled={l === 'R' && phone}
               title={l === 'R' && phone ? t('step6.phoneOnly') : undefined}
-              onClick={() => patch({ lang: l, ran: false, codeErr: '' })}>{l}</button>
+              onClick={() => { setFailOut(''); patch({ lang: l, ran: false, codeErr: '' }) }}>{l}</button>
           ))}
         </div>
       </div>
@@ -87,24 +97,27 @@ export function Step6Code() {
               placeholder={c.lang === 'R' ? t('step6.phR') : t('step6.phPython')} />
           </div>
         : <TemplateEditor lines={def.code.templates[c.lang]} blanks={c.blanks} readOnly={c.shown}
-            onChange={(i, v) => patch(p => { const b = [...p.blanks]; b[i] = v; return { blanks: b } })} />}
+            onChange={(i, v) => { setFailOut(''); patch(p => { const b = [...p.blanks]; b[i] = v; return { blanks: b } }) }} />}
 
       <div className="row" style={{ marginTop: 12 }}>
         <button className="btn" disabled={running >= 0} onClick={run}>▶ {t('step6.run')}</button>
         <span className="small muted">{t('step6.runs', { n: c.runs })}</span>
         {c.runs >= 3 && !c.ran && !c.shown && <button className="btn ghost" onClick={showCode}>{t('step6.showCode')}</button>}
       </div>
+      {loading && <Note>{t(c.lang === 'R' ? 'step6.loadingR' : 'step6.loadingPython')}</Note>}
       {running >= 0 && (
         <div className="stages">
           {(t('step6.stages', { returnObjects: true }) as string[]).map((s, i) => <div key={s} className={i < running ? 'ok' : i === running ? 'on' : 'wait'}>{s}</div>)}
         </div>
       )}
       {c.codeErr && (
-        <Note kind="bad"><b>{t('step6.error')}</b> {c.codeErr} <button className="btn ghost" onClick={openTutor}>{t('step6.explain')}</button></Note>
+        <Note kind="bad"><b>{t('step6.error')}</b> <span style={{ whiteSpace: 'pre-wrap' }}>{c.codeErr}</span> <button className="btn ghost" onClick={openTutor}>{t('step6.explain')}</button></Note>
       )}
+      {c.codeErr && failOut && <div className="out">{failOut}</div>}
       {c.ran && (
         <>
-          <div className="out">{def.code.outputs[c.lang]}</div>
+          {c.simulated && <Note kind="warn">{t('step6.simulatedNote')}</Note>}
+          <div className="out">{c.out || def.code.outputs[c.lang]}</div>
           <ResultChart {...def.code.chart} />
           <p className="small muted">{t('step6.otherLang', { lang: otherLang(c.lang) })}</p>
         </>

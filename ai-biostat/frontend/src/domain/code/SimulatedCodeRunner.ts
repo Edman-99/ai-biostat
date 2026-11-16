@@ -1,9 +1,9 @@
-import { toRegExp } from '@/domain/cases/CaseDefinition'
+import { CodeChecker } from './CodeChecker'
 import { RUN_STAGE_COUNT, type CodeRunner, type RunRequest, type RunResult } from './CodeRunner'
 
-/** Имитация запуска (этап 1): проверяет ключевые элементы кода и выдаёт заранее посчитанный результат. */
+/** Имитация запуска: проверяет ключевые элементы кода и выдаёт заранее посчитанный результат. Запасной вариант. */
 export class SimulatedCodeRunner implements CodeRunner {
-  constructor(private stageDelayMs = 550) {}
+  constructor(private stageDelayMs = 550, private checker = new CodeChecker()) {}
 
   async run(req: RunRequest, onStage: (stage: number) => void): Promise<RunResult> {
     const ok = this.check(req)
@@ -12,13 +12,9 @@ export class SimulatedCodeRunner implements CodeRunner {
       await new Promise(r => setTimeout(r, this.stageDelayMs))
     }
     return ok
-      ? { ok: true, output: req.def.code.outputs[req.lang] }
-      : { ok: false, error: req.def.code.errors[req.lang] }
+      ? { ok: true, output: req.def.code.outputs[req.lang], simulated: true }
+      : { ok: false, kind: 'runtime', error: req.def.code.errors[req.lang], simulated: true }
   }
 
-  check({ def, mode, blanks, code }: RunRequest): boolean {
-    if (mode === 'free') return def.code.freeRequired.every(p => toRegExp(p).test(code))
-    const clean = blanks.map(b => b.replace(/["']/g, ''))
-    return def.code.blankAnswers.every(a => clean.includes(a))
-  }
+  check(req: RunRequest): boolean { return this.checker.check(req) }
 }

@@ -1,6 +1,7 @@
 import type { Lang } from '@/api/types'
 import type { CaseDefinition, Pattern } from '@/domain/cases/CaseDefinition'
 import { CASE21_LABELS, generateCase21Rows } from './data'
+import { toCsv } from '@/domain/analysis/Dataset'
 
 /**
  * Кейс 21 на трёх языках. Всё, что от языка не зависит (структура, ответы, ошибки в данных, шаблоны кода),
@@ -248,6 +249,9 @@ export function buildCase21(lang: Lang): CaseDefinition {
       errors: T.dataErrors,
       retryHint: T.retryHint,
       allFoundNote: T.allFoundNote,
+      csv: () => toCsv(['id', 'age', 'sex', 'employment', 'viral_load', 'vl_suppressed'], generateCase21Rows(lang, false).map(r => ({
+        id: r.id, age: r.age, sex: r.sex, employment: r.emp, viral_load: r.vl, vl_suppressed: r.sup,
+      }))),
     },
     variables: [
       { key: 'id', label: T.variables.id, expected: 'id' },

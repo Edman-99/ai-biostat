@@ -1,6 +1,7 @@
 import type { Lang } from '@/api/types'
 import type { CaseDefinition, Pattern } from '@/domain/cases/CaseDefinition'
 import { int, rng, shuffledUnits } from '../shared/synthetic'
+import { toCsv } from '@/domain/analysis/Dataset'
 
 /**
  * Кейс 4. Неонатальный сепсис: «случай-контроль». χ²-критерий и отношение шансов (логистическая регрессия,
@@ -11,7 +12,7 @@ import { int, rng, shuffledUnits } from '../shared/synthetic'
  */
 const SEX: Record<Lang, { m: string; f: string }> = { ru: { m: 'М', f: 'Ж' }, kk: { m: 'Е', f: 'Ә' }, en: { m: 'M', f: 'F' } }
 
-export function generateCase04Rows(lang: Lang = 'ru') {
+export function generateCase04Rows(lang: Lang = 'ru', dirty = true) {
   const R = rng(404)
   const units = shuffledUnits<[number, number]>(R, [[[1, 1], 24], [[1, 0], 36], [[0, 1], 22], [[0, 0], 98]])
   const rows = units.map(([sepsis, prom18], i) => ({
@@ -22,6 +23,7 @@ export function generateCase04Rows(lang: Lang = 'ru') {
     gest_age: sepsis ? int(R, 33, 39) : int(R, 36, 41),
     sex: R() < 0.52 ? SEX[lang].m : SEX[lang].f,
   }))
+  if (!dirty) return rows
   // «грязь» для шага 2
   rows[1].birth_weight = 32000
   rows[5].gest_age = 54
@@ -262,6 +264,7 @@ export function buildCase04(lang: Lang): CaseDefinition {
       errors: T.dataErrors,
       retryHint: T.retryHint,
       allFoundNote: T.allFoundNote,
+      csv: () => toCsv(['id', 'sepsis', 'prom18', 'birth_weight', 'gest_age', 'sex'], generateCase04Rows(lang, false)),
     },
     variables: [
       { key: 'id', label: T.variables.id, expected: 'id' },
