@@ -18,7 +18,7 @@ export function PlayerScreen() {
   const { app, cases, research, saver } = useServices()
   const { activeCaseId, tutorOpen, cases: progressById } = useAppState()
   const saveStatus = useStore(saver)
-  const def = cases.get(activeCaseId)!
+  const def = cases.get(activeCaseId, lang)!
   const progress = progressById[activeCaseId] ?? app.caseProgress(activeCaseId)
   const level = app.level()
   const entry = catalogEntry(def.id)

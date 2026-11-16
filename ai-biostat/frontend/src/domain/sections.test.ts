@@ -130,3 +130,33 @@ describe('компетенции и аналитика группы', () => {
     expect(ga.report(data, null).avgScore).toBe(55)
   })
 })
+
+describe('кейс 21 на казахском и английском', () => {
+  const registry = defaultCaseRegistry()
+  const scorer = new CaseScorer()
+  const ru = registry.get('21', 'ru')!
+
+  it.each(['kk', 'en'] as const)('%s: та же структура, что и в ru', lang => {
+    const d = registry.get('21', lang)!
+    expect(d.title).not.toBe(ru.title)
+    expect(Object.keys(d.data.errors)).toEqual(Object.keys(ru.data.errors))
+    expect(d.method.options.length).toBe(ru.method.options.length)
+    expect(d.method.correct).toBe(ru.method.correct)
+    expect(d.aiTrap.fragments.length).toBe(ru.aiTrap.fragments.length)
+    expect(d.interpretation.checklist.length).toBe(ru.interpretation.checklist.length)
+    expect(d.debrief.disputeSteps.length).toBe(3)
+    expect(Object.keys(d.tutor.quick)).toEqual(Object.keys(ru.tutor.quick))
+    expect(d.data.preview.map(r => [r.id, r.age, r.viral_load])).toEqual(ru.data.preview.map(r => [r.id, r.age, r.viral_load]))
+  })
+
+  it.each([
+    ['kk', 'Басылған ВЖ үлесі жалдамалы жұмыскерлерде 94%, үй шаруасындағы әйелдерде 77%; χ² = 11,1, p = 0,004. Бұл бақылаулық байланыс, себептілік дәлелденбеген.', 'Бұл себеп-салдарлық қорытынды, бақылаулық деректер оны дәлелдемейді'],
+    ['en', 'The proportion with suppressed VL was 94% among wage employees and 77% among homemakers; χ² = 11.1, p = 0.004. This is an observational association, not causation.', 'This is a causal claim from observational data'],
+  ] as const)('%s: интерпретация и ловушка ИИ засчитываются', (lang, interp, fix) => {
+    const d = registry.get('21', lang)!
+    const p = { ...newCaseProgress(), interp, frag: 2, fix }
+    const s = scorer.score(d, p, 'pre')
+    expect(s.byKey.interp).toBe(20)          // 4 пункта рубрики × 5 (слов меньше 40)
+    expect(s.byKey.ai).toBe(15)
+  })
+})

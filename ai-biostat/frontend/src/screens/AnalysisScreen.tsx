@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import type { Lang } from '@/api/types'
 import { useServices } from '@/app/ServicesContext'
 import { generateCase21Rows } from '@/cases/case21/data'
 import { useLang } from '@/core/i18n'
@@ -13,8 +14,8 @@ import { LearnerShell } from './LearnerShell'
 const MAX_FILE_BYTES = 5 * 1024 * 1024
 
 /** Учебный набор — данные кейса 21 (с теми же ошибками ввода, что на шаге 2: их видно по min/max). */
-function learningDataset(): Dataset {
-  const rows = generateCase21Rows().map(r => ({
+function learningDataset(lang: Lang): Dataset {
+  const rows = generateCase21Rows(lang).map(r => ({
     id: String(r.id), age: String(r.age), sex: r.sex, employment: r.emp, viral_load: String(r.vl), vl_suppressed: r.sup,
   }))
   return { name: 'case21_hiv_employment.csv', delimiter: ',', columns: Object.keys(rows[0]), rows }
@@ -70,6 +71,7 @@ function SummaryView({ s, column }: { s: Summary; column: string }) {
 export function AnalysisScreen() {
   const { t } = useTranslation()
   const { research } = useServices()
+  const lang = useLang()
   const [ds, setDs] = useState<Dataset | null>(null)
   const [error, setError] = useState('')
   const [column, setColumn] = useState('')
@@ -116,7 +118,7 @@ export function AnalysisScreen() {
             <span>{t('analysis.upload')}</span>
             <small>{t('analysis.uploadHint')}</small>
           </label>
-          <button className="btn" style={{ width: '100%' }} onClick={() => load(learningDataset())}>{t('analysis.useLearning')}</button>
+          <button className="btn" style={{ width: '100%' }} onClick={() => load(learningDataset(lang))}>{t('analysis.useLearning')}</button>
           <div className="dataset-status">
             {error ? <span style={{ color: 'var(--bad)' }}>{error}</span>
               : ds ? t('analysis.loaded', { name: ds.name, rows: ds.rows.length, cols: ds.columns.length })

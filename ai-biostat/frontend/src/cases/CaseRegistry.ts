@@ -1,6 +1,7 @@
 import type { CaseDefinition } from '@/domain/cases/CaseDefinition'
 import type { Localized } from '@/core/localized'
-import { case21 } from './case21/case21'
+import { buildCase21 } from './case21/case21'
+import type { Lang } from '@/api/types'
 
 export type CaseLevel = 'basic' | 'advanced'
 
@@ -52,15 +53,28 @@ export const catalogEntry = (id: string) => PILOT_CATALOG.find(e => e.id === id)
 export const catalogFor = (role: string | undefined): CatalogEntry[] =>
   role === 'specialist' ? PILOT_CATALOG : PILOT_CATALOG.filter(e => e.level === 'basic')
 
-/** Наполненные кейсы. Новый кейс = новый файл описания + одна строка здесь. */
-export class CaseRegistry {
-  private cases = new Map<string, CaseDefinition>()
-
-  constructor(defs: CaseDefinition[]) { defs.forEach(d => this.cases.set(d.id, d)) }
-
-  get(id: string): CaseDefinition | undefined { return this.cases.get(id) }
-  has(id: string): boolean { return this.cases.has(id) }
-  ids(): string[] { return [...this.cases.keys()] }
+/** Кейс на нужном языке. Баллы от языка не зависят (шаблоны проверки общие), поэтому для подсчёта годится любой. */
+export interface CaseSource {
+  id: string
+  build: (lang: Lang) => CaseDefinition
 }
 
-export const defaultCaseRegistry = () => new CaseRegistry([case21])
+/** Наполненные кейсы. Новый кейс = новый файл описания + одна строка здесь. */
+export class CaseRegistry {
+  private sources = new Map<string, CaseSource>()
+  private cache = new Map<string, CaseDefinition>()
+
+  constructor(sources: CaseSource[]) { sources.forEach(s => this.sources.set(s.id, s)) }
+
+  get(id: string, lang: Lang = 'ru'): CaseDefinition | undefined {
+    const src = this.sources.get(id)
+    if (!src) return undefined
+    const key = `${id}|${lang}`
+    if (!this.cache.has(key)) this.cache.set(key, src.build(lang))
+    return this.cache.get(key)
+  }
+  has(id: string): boolean { return this.sources.has(id) }
+  ids(): string[] { return [...this.sources.keys()] }
+}
+
+export const defaultCaseRegistry = () => new CaseRegistry([{ id: '21', build: buildCase21 }])
