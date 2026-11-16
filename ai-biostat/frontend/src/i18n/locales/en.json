@@ -154,7 +154,19 @@
   "defaultQ": "How should I approach this step?",
   "copy": "Copy",
   "copied": "Copied",
-  "counter": "Tutor visits: {{n}} · counted in the study"
+  "counter": "Tutor visits: {{n}} · counted in the study",
+  "chat": {
+   "welcome": "Hello! I am an AI tutor for biostatistics. Tell me what is unclear — I will help you work it out, but the decision is yours.",
+   "thinking": "The tutor is thinking…",
+   "placeholder": "Your question (Enter — send, Shift+Enter — new line)",
+   "send": "Send",
+   "footer": "Messages left today: {{n}}. The dialogue is saved for the study (participant code only).",
+   "limit": "Today’s message limit is used up. The tutor will be available again tomorrow.",
+   "blocked": "The tutor is not used at this step.",
+   "error": "The tutor is temporarily unavailable. Please try again in a minute.",
+   "gptLink": "Open the author’s GPT in a separate tab ↗",
+   "privacy": "Do not send patients’ personal data to the tutor. Check its answers — AI can make mistakes."
+  }
  },
  "step1": {
   "title": "Step 1. Professional situation",
@@ -355,7 +367,8 @@
     "attempts": "Case results",
     "events": "Events (AI, code, steps)",
     "diagnostics": "Assessment",
-    "disputes": "Disputes"
+    "disputes": "Disputes",
+    "tutor": "Tutor dialogues"
    },
    "caseStep": "case {{id}} · step {{n}}",
    "points": "points {{s}}",

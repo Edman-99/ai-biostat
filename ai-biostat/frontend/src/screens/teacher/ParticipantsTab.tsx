@@ -9,7 +9,7 @@ import { ResetPasswordButton } from './ResetPasswordButton'
 import { TeacherScopePanel } from './TeacherScopePanel'
 import type { OverviewState } from './useOverview'
 
-const EXPORTS: ExportKind[] = ['attempts', 'events', 'diagnostics', 'disputes']
+const EXPORTS: ExportKind[] = ['attempts', 'events', 'diagnostics', 'disputes', 'tutor']
 
 const scoreText = (p: OverviewPerson) => `${p.score ?? '—'}${p.grade ? ` · ${p.grade}` : ''}`
 const rowKey = (p: OverviewPerson) => `${p.code}|${p.case_id ?? ''}`

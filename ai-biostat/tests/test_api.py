@@ -212,3 +212,29 @@ def test_case_editor_texts_history_and_permissions():
     assert admin.put("/api/teacher/case-status/21", json={"status": "biostat", "note": "отправлено 18.11"}).status_code == 200
     row = [c for c in other.get("/api/teacher/cases").json() if c["case_id"] == "21"][0]
     assert row["status"] == "biostat" and row["saves"] == 2 and row["note"] == "отправлено 18.11"
+
+
+def test_tutor_chat_saved_blocked_and_limited(monkeypatch):
+    from app import tutor
+    make("P-70", "student"); make("T-70", "teacher")
+    s, t = client("P-70"), client("T-70")
+    body = {"case_id": "21", "step": 5, "lang": "kk", "context": "Кейс 21, қадам 5", "messages": [{"role": "user", "content": "χ² деген не?"}]}
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    assert s.get("/api/tutor/status").json()["enabled"] is False
+    assert s.post("/api/tutor", json=body).status_code == 503          # без ключа — выключен
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "test")
+    seen = {}
+    def fake_ask(messages, context):
+        seen["messages"], seen["context"] = messages, context
+        return {"text": "χ² — жиіліктерді салыстыру критерийі.", "refused": False, "input_tokens": 100, "output_tokens": 20}
+    monkeypatch.setattr(tutor, "ask", fake_ask)
+    r = s.post("/api/tutor", json=body)
+    assert r.status_code == 200 and r.json()["reply"].startswith("χ²")
+    assert "қазақ" in seen["context"] and seen["messages"][-1]["content"] == "χ² деген не?"
+    assert s.post("/api/tutor", json={**body, "step": 7}).status_code == 403   # закрытый шаг
+    assert s.post("/api/tutor", json={**body, "messages": [{"role": "assistant", "content": "x"}]}).status_code == 400
+    csv_text = t.get("/api/teacher/export/tutor.csv").text
+    assert "χ² деген не?" in csv_text and "P-70" in csv_text and "assistant" in csv_text
+    monkeypatch.setattr(tutor, "DAILY_LIMIT", 1)
+    assert s.post("/api/tutor", json=body).status_code == 429
+    assert s.get("/api/tutor/status").json()["left"] == 0

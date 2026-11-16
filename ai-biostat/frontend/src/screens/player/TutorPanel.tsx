@@ -2,6 +2,9 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useServices } from '@/app/ServicesContext'
 import { useCaseSession } from './CaseSession'
+import { useStepNames } from './steps'
+import { TutorChat, useTutorStatus } from '@/ui/TutorChat'
+import type { ChatMessage } from '@/api/TutorApi'
 
 // «Биостатистика пәнінен ЖИ-репетиторы» — в пилоте внешний GPT, в системе считаем только переходы.
 export const TUTOR_URL = 'https://chatgpt.com/g/g-6927183a0bb48191a49dda7e8525f334-biostatistika-p-ninen-zhi-repetitory'
@@ -24,6 +27,9 @@ export function TutorPanel({ open, onClose }: { open: boolean; onClose: () => vo
   const { research } = useServices()
   const { def, progress, patch } = useCaseSession()
   const blocked = BLOCKED_STEPS.includes(progress.step) ? t(`tutor.blocked${progress.step}`) : ''
+  const status = useTutorStatus()
+  const stepNames = useStepNames()
+  const quick = def.tutor.quick[progress.step] || [t('tutor.defaultQ')]
 
   const onOpenTutor = () => {
     patch(c => ({ hints: c.hints + 1 }))
@@ -36,7 +42,15 @@ export function TutorPanel({ open, onClose }: { open: boolean; onClose: () => vo
         <div className="spread"><b>{t('tutor.title')}</b><button className="btn ghost small" id="tclose" aria-label={t('tutor.collapse')} onClick={onClose}>✕</button></div>
         <div className="chips"><span className="chip">{t('tutor.case', { id: def.id })}</span><span className="chip">{t('tutor.step', { n: progress.step })}</span><span className="chip">{def.data.fileName}</span></div>
       </header>
-      {blocked ? <div className="locked-ai">{blocked}</div> : (
+      {blocked ? <div className="locked-ai">{blocked}</div> : status?.enabled ? (
+        <>
+          <TutorChat caseId={def.id} step={progress.step} initialLeft={status.left} quick={quick}
+            context={`${t('tutor.case', { id: def.id })} «${def.title}», ${t('tutor.step', { n: progress.step })} «${stepNames[progress.step - 1]}»`}
+            messages={(progress.chat as ChatMessage[]) ?? []} onChange={chat => patch({ chat })}
+            onSent={() => patch(c => ({ hints: c.hints + 1 }))} />
+          <a className="small" href={TUTOR_URL} target="_blank" rel="noopener" onClick={onOpenTutor} style={{ padding: '0 16px' }}>{t('tutor.chat.gptLink')}</a>
+        </>
+      ) : (
         <div className="ext">
           <p className="small" style={{ margin: 0 }}>{t('tutor.intro')}</p>
           <a className="btn primary" href={TUTOR_URL} target="_blank" rel="noopener" onClick={onOpenTutor}

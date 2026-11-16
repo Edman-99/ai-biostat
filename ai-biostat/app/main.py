@@ -6,7 +6,7 @@ from fastapi import FastAPI, HTTPException, Request, Response, Depends
 from fastapi.responses import FileResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
-from . import access, db, participants
+from . import access, db, participants, tutor
 from .security import check_password, hash_password, new_token
 
 app = FastAPI(title="AI-Biostat", docs_url=None, redoc_url=None)
@@ -247,7 +247,8 @@ def overview(t=Depends(teacher)):
     with db.connect() as con:
         people = con.execute("""SELECT p.code, p.first_name, p.last_name, p.role, p.grp, a.case_id, a.step, a.max_step, a.score, a.grade,
             a.status, a.updated_at,
-            (SELECT COUNT(*) FROM events e WHERE e.code=p.code AND e.type='tutor_open') AS tutor_opens
+            (SELECT COUNT(*) FROM events e WHERE e.code=p.code AND e.type='tutor_open')
+              + (SELECT COUNT(*) FROM tutor_messages tm WHERE tm.code=p.code AND tm.role='user') AS tutor_opens
             FROM participants p LEFT JOIN attempts a ON a.code=p.code
             WHERE p.role!='teacher' AND """ + cond + """ ORDER BY p.grp, p.code""", args).fetchall()
         disputes = con.execute("SELECT d.*, p.first_name, p.last_name FROM disputes d LEFT JOIN participants p "
@@ -307,6 +308,69 @@ def teachers(t=Depends(teacher)):
     require_admin(t)
     with db.connect() as con:
         return [{"code": c, "groups": g} for c, g in access.all_assignments(con).items()]
+
+
+# ---------- ИИ-репетитор ----------
+class TutorMsg(BaseModel):
+    role: str
+    content: str
+
+
+class TutorIn(BaseModel):
+    case_id: str | None = None
+    step: int | None = None
+    lang: str = "ru"
+    context: str = ""            # название кейса и шага на языке студента (для промпта)
+    messages: list[TutorMsg]
+
+
+@app.get("/api/tutor/status")
+def tutor_status(user=Depends(current)):
+    """Включён ли встроенный репетитор и сколько сообщений осталось сегодня."""
+    with db.connect() as con:
+        used = _tutor_used_today(con, user["code"])
+    return {"enabled": tutor.enabled(), "left": max(0, tutor.DAILY_LIMIT - used), "limit": tutor.DAILY_LIMIT}
+
+
+def _tutor_used_today(con, code) -> int:
+    since = time.time() - 24 * 3600
+    return con.execute("SELECT COUNT(*) FROM tutor_messages WHERE code=? AND role='user' AND ts>?", (code, since)).fetchone()[0]
+
+
+@app.post("/api/tutor")
+def tutor_chat(body: TutorIn, user=Depends(current)):
+    """Сообщение студента → ответ Claude Haiku 5.5. Диалог сохраняется для исследования (только код участника)."""
+    if not tutor.enabled():
+        raise HTTPException(503, "Встроенный репетитор не настроен")
+    if body.step in tutor.BLOCKED_STEPS and body.case_id:
+        raise HTTPException(403, "На этом шаге репетитор не используется")
+    msgs = [m for m in body.messages if m.role in ("user", "assistant") and m.content.strip()][-tutor.HISTORY:]
+    while msgs and msgs[0].role != "user":
+        msgs = msgs[1:]
+    if not msgs or msgs[-1].role != "user":
+        raise HTTPException(400, "Нет вопроса")
+    question = msgs[-1].content.strip()
+    if len(question) > tutor.MAX_CHARS:
+        raise HTTPException(400, f"Слишком длинное сообщение (до {tutor.MAX_CHARS} символов)")
+    with db.connect() as con:
+        if _tutor_used_today(con, user["code"]) >= tutor.DAILY_LIMIT:
+            raise HTTPException(429, "Лимит сообщений репетитору на сегодня исчерпан")
+        con.execute("INSERT INTO tutor_messages(code, case_id, step, role, content, ts) VALUES(?,?,?,?,?,?)",
+                    (user["code"], body.case_id, body.step, "user", question, time.time()))
+    lang_name = {"kk": "қазақ", "ru": "русский", "en": "English"}.get(body.lang, body.lang)
+    context = (body.context or "раздел «AI-репетитор», вне кейса")[:300] + f". Язык интерфейса студента: {lang_name}."
+    try:
+        r = tutor.ask([{"role": m.role, "content": m.content[:tutor.MAX_CHARS]} for m in msgs], context)
+    except Exception as e:                     # сеть / лимиты API — студенту понятное сообщение, подробности в журнал
+        print("tutor error:", type(e).__name__, str(e)[:300], flush=True)
+        raise HTTPException(502, "Репетитор временно недоступен, попробуйте через минуту")
+    text = r["text"] or ("Не могу ответить на этот вопрос. Переформулируйте его, пожалуйста, по теме курса." if r["refused"] else "")
+    with db.connect() as con:
+        con.execute("INSERT INTO tutor_messages(code, case_id, step, role, content, input_tokens, output_tokens, ts) "
+                    "VALUES(?,?,?,?,?,?,?,?)", (user["code"], body.case_id, body.step, "assistant", text,
+                                                r["input_tokens"], r["output_tokens"], time.time()))
+        left = max(0, tutor.DAILY_LIMIT - _tutor_used_today(con, user["code"]))
+    return {"reply": text, "left": left}
 
 
 # ---------- редактор кейсов: правки текстов поверх кейсов из кода ----------
@@ -524,6 +588,7 @@ EXPORTS = {
     "events": "SELECT code, case_id, step, type, payload, ts FROM events",
     "diagnostics": "SELECT code, variant, answers, pct, ts FROM diagnostics",
     "disputes": "SELECT code, case_id, step, ai_score, status, decision, new_score, reason, created_at, resolved_at FROM disputes",
+    "tutor": "SELECT code, case_id, step, role, content, input_tokens, output_tokens, ts FROM tutor_messages",
 }
 
 

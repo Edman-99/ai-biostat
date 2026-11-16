@@ -1,5 +1,7 @@
 fastapi>=0.110
 uvicorn>=0.29
+# ИИ-репетитор (Claude Haiku 5.5); версия 1.x — по документации, с которой написан app/tutor.py
+anthropic==1.17.0
 # для автотестов:
 httpx
 pytest

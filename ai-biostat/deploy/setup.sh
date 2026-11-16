@@ -18,10 +18,10 @@ fi
 echo "==> 2/6 Код сайта в $APP"
 id aib >/dev/null 2>&1 || useradd --system --home "$APP" --shell /usr/sbin/nologin aib
 mkdir -p "$APP/data" "$APP/backups"
-rsync -a --delete --exclude data --exclude backups --exclude .git --exclude '.venv' --exclude 'node_modules' "$SRC/" "$APP/"
+rsync -a --delete --exclude data --exclude backups --exclude secrets.env --exclude .git --exclude '.venv' --exclude 'node_modules' "$SRC/" "$APP/"
 python3 -m venv "$APP/.venv"
 "$APP/.venv/bin/pip" install -q --upgrade pip
-"$APP/.venv/bin/pip" install -q fastapi uvicorn
+"$APP/.venv/bin/pip" install -q fastapi uvicorn "anthropic==1.17.0"
 chown -R aib:aib "$APP"
 chmod 700 "$APP/data" "$APP/backups"
 echo "==> 3/6 Служба сайта"
@@ -33,6 +33,8 @@ After=network.target
 User=aib
 WorkingDirectory=$APP
 Environment=AIB_SECURE_COOKIE=1
+# ключ ИИ-репетитора (ANTHROPIC_API_KEY=…) — только на сервере, файл с правами 600; если файла нет, репетитор выключен
+EnvironmentFile=-/opt/ai-biostat/secrets.env
 ExecStart=$APP/.venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8000 --proxy-headers
 Restart=always
 [Install]

@@ -89,7 +89,7 @@ export interface Overview {
   disputes: Dispute[]
 }
 
-export type ExportKind = 'attempts' | 'events' | 'diagnostics' | 'disputes'
+export type ExportKind = 'attempts' | 'events' | 'diagnostics' | 'disputes' | 'tutor'
 
 export interface IssuedPassword {
   code: string

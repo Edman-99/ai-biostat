@@ -22,6 +22,9 @@ CREATE TABLE IF NOT EXISTS disputes(
   id INTEGER PRIMARY KEY AUTOINCREMENT, code TEXT, case_id TEXT, step TEXT, text TEXT, ai_score INTEGER,
   status TEXT DEFAULT 'open', decision TEXT, new_score INTEGER, reason TEXT, resolved_by TEXT,
   created_at REAL, resolved_at REAL);
+CREATE TABLE IF NOT EXISTS tutor_messages(
+  id INTEGER PRIMARY KEY AUTOINCREMENT, code TEXT NOT NULL, case_id TEXT, step INTEGER, role TEXT NOT NULL,
+  content TEXT NOT NULL, input_tokens INTEGER, output_tokens INTEGER, ts REAL);
 CREATE TABLE IF NOT EXISTS case_edits(
   id INTEGER PRIMARY KEY AUTOINCREMENT, case_id TEXT NOT NULL, lang TEXT NOT NULL, texts TEXT NOT NULL,
   author TEXT, ts REAL);

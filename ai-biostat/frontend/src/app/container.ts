@@ -4,6 +4,7 @@ import { ProgressApi } from '@/api/ProgressApi'
 import { ResearchApi } from '@/api/ResearchApi'
 import { DisputesApi } from '@/api/DisputesApi'
 import { TeacherApi } from '@/api/TeacherApi'
+import { TutorApi } from '@/api/TutorApi'
 import { defaultCaseRegistry, type CaseRegistry } from '@/cases/CaseRegistry'
 import { GradeScale } from '@/domain/grading/GradeScale'
 import { CaseScorer } from '@/domain/scoring/CaseScorer'
@@ -36,6 +37,7 @@ export interface Services {
   research: ResearchTracker
   disputes: DisputesApi
   teacher: TeacherApi
+  tutor: TutorApi
   cases: CaseRegistry
   scorer: CaseScorer
   grades: GradeScale
@@ -75,6 +77,7 @@ export function createServices(): Services {
     research: new ResearchTracker(app, new ResearchApi(http)),
     disputes: new DisputesApi(http),
     teacher: new TeacherApi(http),
+    tutor: new TutorApi(http),
     debrief: new DebriefBuilder(),
     diagnostic,
     caseEdits,
