@@ -2,6 +2,8 @@
  * Прогресс прохождения кейса. Формат совпадает с тем, что сохраняла прежняя версия сайта
  * (поле state.cases[id] на сервере), — уже сохранённые ответы студентов читаются без миграции.
  */
+import type { AiCheckAnswer } from '@/domain/aicheck/AiCheckTrainer'
+
 export type CodeLang = 'R' | 'Python'
 export type Level = 'pre' | 'post'   // pre — студент, post — специалист
 
@@ -52,4 +54,6 @@ export interface SavedState {
   diagDone: boolean
   pct: Record<string, number> | null
   cases: Record<string, CaseProgress>
+  /** тренажёр «Проверка ИИ» (с v0.8.0; в старых записях поля нет) */
+  trainer?: Record<string, AiCheckAnswer>
 }

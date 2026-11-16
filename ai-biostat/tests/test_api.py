@@ -101,3 +101,21 @@ def test_teacher_creates_group_with_auto_codes():
     assert t.post("/api/teacher/participants/group", json={"group": "", "count": 3}).status_code == 400
     assert t.post("/api/teacher/participants/group", json={"group": "X", "count": 500}).status_code == 400
     assert t.post("/api/teacher/participants/group", json={"group": "X", "count": 1, "role": "teacher"}).status_code == 400
+
+def test_teacher_analytics_codes_only_and_trainer():
+    make("P-20", "student"); make("T-20", "teacher")
+    s, t = client("P-20"), client("T-20")
+    assert s.get("/api/teacher/analytics").status_code == 403
+    st = {"diagDone": True, "trainer": {"t1": {"verdict": "wrong", "reason": "x", "ok": True, "tries": 1}},
+          "cases": {"21": {"step": 10, "maxStep": 10, "score": 70, "flags": [4]}}}
+    assert s.put("/api/state", json={"state": st}).status_code == 200
+    assert s.post("/api/diagnostic", json={"variant": "A", "answers": [1], "pct": {"Биостатистика": 72}}).status_code == 200
+    s.put("/api/profile", json={"first_name": "Айгерим", "last_name": "Тестова"})
+    a = t.get("/api/teacher/analytics").json()
+    assert "Тестова" not in str(a)
+    me = [p for p in a["people"] if p["code"] == "P-20"][0]
+    assert me["last_active"] and me["grp"] == "G1"
+    att = [x for x in a["attempts"] if x["code"] == "P-20"][0]
+    assert att["progress"]["flags"] == [4] and att["score"] == 70
+    assert a["diagnostics"]["P-20"]["Биостатистика"] == 72
+    assert a["trainer"]["P-20"]["t1"]["ok"] is True

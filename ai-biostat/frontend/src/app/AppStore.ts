@@ -1,8 +1,13 @@
 import { Store } from '@/core/store/Store'
 import type { User } from '@/api/types'
 import { newCaseProgress, type CaseProgress, type Level, type SavedState } from '@/domain/progress/types'
+import type { AiCheckAnswer } from '@/domain/aicheck/AiCheckTrainer'
 
 export type Screen = 'login' | 'diag' | 'diagres' | 'home' | 'player' | 'teacher' | 'profile'
+  | 'cases' | 'tutor' | 'analysis' | 'aicheck' | 'progress'
+
+/** Разделы бокового меню студента и специалиста (по порядку). */
+export const LEARNER_SECTIONS: Screen[] = ['home', 'diagres', 'cases', 'tutor', 'analysis', 'aicheck', 'progress']
 
 export interface DiagState {
   idx: number
@@ -17,6 +22,8 @@ export interface AppState {
   me: User | null
   diag: DiagState
   cases: Record<string, CaseProgress>
+  /** тренажёр «Проверка ИИ»: id задания → ответ */
+  trainer: Record<string, AiCheckAnswer>
   activeCaseId: string
   tutorOpen: boolean
 }
@@ -24,7 +31,7 @@ export interface AppState {
 const initial = (): AppState => ({
   screen: 'login', prevScreen: null, me: null,
   diag: { idx: 0, answers: [], done: false, pct: null },
-  cases: {}, activeCaseId: '21', tutorOpen: false,
+  cases: {}, trainer: {}, activeCaseId: '21', tutorOpen: false,
 })
 
 /** Состояние приложения и все допустимые его изменения. Экраны не меняют состояние напрямую. */
@@ -39,6 +46,7 @@ export class AppStore extends Store<AppState> {
         next.diag = { ...s.diag, answers: saved.diagAns || [], done: !!saved.diagDone, pct: saved.pct || null }
         next.cases = Object.fromEntries(
           Object.entries(saved.cases || {}).map(([id, c]) => [id, { ...newCaseProgress(), ...c }]))
+        next.trainer = saved.trainer || {}
       }
       next.screen = me.role === 'teacher' ? 'teacher' : (next.diag.done ? 'home' : 'diag')
       return next
@@ -90,6 +98,16 @@ export class AppStore extends Store<AppState> {
 
   goToStep(id: string, n: number) {
     this.patchCase(id, c => ({ step: n, maxStep: Math.max(c.maxStep, n) }))
+  }
+
+  // ---------- тренажёр «Проверка ИИ» ----------
+  saveTrainerAnswer(taskId: string, answer: Omit<AiCheckAnswer, 'tries'>) {
+    this.setState(s => {
+      const prev = s.trainer[taskId]
+      // однажды решённое задание остаётся решённым
+      const next: AiCheckAnswer = { ...answer, ok: answer.ok || !!prev?.ok, tries: (prev?.tries ?? 0) + 1 }
+      return { ...s, trainer: { ...s.trainer, [taskId]: next } }
+    })
   }
 
   setTutorOpen(open: boolean) { this.setState(s => ({ ...s, tutorOpen: open })) }

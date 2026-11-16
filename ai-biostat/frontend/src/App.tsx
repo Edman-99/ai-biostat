@@ -8,6 +8,11 @@ import { DiagnosticResultScreen } from '@/screens/DiagnosticResultScreen'
 import { HomeScreen } from '@/screens/HomeScreen'
 import { PlayerScreen } from '@/screens/player/PlayerScreen'
 import { TeacherScreen } from '@/screens/teacher/TeacherScreen'
+import { CasesScreen } from '@/screens/CasesScreen'
+import { TutorScreen } from '@/screens/TutorScreen'
+import { AnalysisScreen } from '@/screens/AnalysisScreen'
+import { AiCheckScreen } from '@/screens/AiCheckScreen'
+import { ProgressScreen } from '@/screens/ProgressScreen'
 
 const SCREENS: Record<Screen, ComponentType> = {
   login: LoginScreen,
@@ -15,6 +20,11 @@ const SCREENS: Record<Screen, ComponentType> = {
   diag: DiagnosticScreen,
   diagres: DiagnosticResultScreen,
   home: HomeScreen,
+  cases: CasesScreen,
+  tutor: TutorScreen,
+  analysis: AnalysisScreen,
+  aicheck: AiCheckScreen,
+  progress: ProgressScreen,
   player: PlayerScreen,
   teacher: TeacherScreen,
 }

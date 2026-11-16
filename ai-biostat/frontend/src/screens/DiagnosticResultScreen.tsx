@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { useAppState, useServices } from '@/app/ServicesContext'
 import { BLOCK_KEY } from '@/domain/diagnostic/Diagnostic'
 import { ProgressBar } from '@/ui/common'
-import { TopBar } from '@/ui/TopBar'
+import { LearnerShell } from './LearnerShell'
 
 export function DiagnosticResultScreen() {
   const { t } = useTranslation()
@@ -20,18 +20,19 @@ export function DiagnosticResultScreen() {
   }, [done, answers, pct, research, app])
 
   return (
-    <>
-      <TopBar />
-      <main className="center" style={{ maxWidth: 620 }}>
-        <h1>{t('diag.resultTitle')}</h1>
+    <LearnerShell>
+      <div style={{ maxWidth: 680 }}>
+        <p className="eyebrow">{t('nav.diagres')}</p>
+        <h1 className="serif">{t('diag.resultTitle')}</h1>
         <p className="muted">{t('diag.growth', { weak: blockName(diagnostic.weakest(pct)) })}</p>
         <div className="panel" style={{ display: 'grid', gap: 14 }}>
           {Object.entries(pct).map(([k, v]) => (
             <div key={k}><div className="spread small"><span>{blockName(k)}</span><b>{v}%</b></div><ProgressBar pct={v} /></div>
           ))}
         </div>
-        <div style={{ marginTop: 20 }}><button className="btn primary" onClick={() => app.navigate('home')}>{t('diag.startCase')}</button></div>
-      </main>
-    </>
+        <p className="small muted" style={{ marginTop: 12 }}>{t('diag.exitNote')}</p>
+        <div style={{ marginTop: 16 }}><button className="btn primary" onClick={() => app.navigate('cases')}>{t('diag.startCase')}</button></div>
+      </div>
+    </LearnerShell>
   )
 }

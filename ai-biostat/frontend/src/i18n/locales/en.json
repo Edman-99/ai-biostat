@@ -76,17 +76,10 @@
   "finish": "Finish assessment",
   "resultTitle": "Your starting level",
   "growth": "Area for growth — “{{weak}}”. The tutor will ask more questions on this topic.",
-  "startCase": "Start the first case"
+  "startCase": "Start the first case",
+  "exitNote": "This is the entry diagnostic: it is taken once. The final one (variant B) comes at the end of the pilot."
  },
  "home": {
-  "nav": {
-   "home": "Home",
-   "cases": "My cases",
-   "analysis": "Data analysis",
-   "aicheck": "AI check",
-   "progress": "My progress",
-   "label": "Sections"
-  },
   "hello": "Hello",
   "helloName": "Hello, {{name}}",
   "fillProfile": "Add your name in the profile so the teacher can see whose work this is.",
@@ -303,7 +296,8 @@
    "review": "Review",
    "editor": "Case editor",
    "diag": "Assessment",
-   "groups": "Participants & export"
+   "groups": "Participants & export",
+   "analytics": "Analytics"
   },
   "review": {
    "intro": "Disputed scores first. A dispute does not block the student; they will see the decision and its justification.",
@@ -443,5 +437,223 @@
    "group": "Group",
    "cardNote": "You can change the password in your profile after signing in."
   }
+ },
+ "nav": {
+  "label": "Sections",
+  "menu": "Section menu",
+  "tagline": "learning environment",
+  "privacy": "Training data — no personal medical data",
+  "home": "Overview",
+  "diagres": "Diagnostic",
+  "cases": "Practice cases",
+  "tutor": "AI tutor",
+  "analysis": "R / Python analysis",
+  "aicheck": "AI check",
+  "progress": "My progress",
+  "course": "Biostatistics · pilot module"
+ },
+ "overview": {
+  "eyebrow": "Original digital learning product",
+  "title1": "Statistical thinking",
+  "title2": "for medical decisions",
+  "lead": "Learn biostatistics through practice cases. The AI tutor asks questions, guides your reasoning and helps you check your conclusion — but the decision is yours.",
+  "openCases": "Open cases",
+  "orbit": {
+   "data": "Data",
+   "method": "Method",
+   "conclusion": "Conclusion",
+   "tutor": "tutor"
+  },
+  "routeEyebrow": "Your route",
+  "routeTitle": "From a question to a justified conclusion",
+  "routeLead": "One cycle develops biostatistical, analytical and AI competence.",
+  "route": {
+   "diag": {
+    "title": "Diagnostic",
+    "text": "Baseline level across four competencies and areas for growth."
+   },
+   "practice": {
+    "title": "Practice",
+    "text": "10-step cases on training medical data, R and Python code."
+   },
+   "critical": {
+    "title": "Critical check",
+    "text": "Find errors in AI answers and justify your decision."
+   },
+   "reflection": {
+    "title": "Reflection",
+    "text": "Debriefing after each case and competency dynamics."
+   }
+  },
+  "compEyebrow": "Entry diagnostic",
+  "compTitle": "Your starting point"
+ },
+ "casesPage": {
+  "eyebrow": "Practice cases",
+  "title": "Learn from medical data",
+  "lead": "Each case goes from a research question to a professional conclusion. The data are simulated specifically for training.",
+  "steps": "10 steps",
+  "time": "autosave",
+  "review": "Open",
+  "preliminary": "preliminary",
+  "status": {
+   "empty": "Coming soon",
+   "new": "Available",
+   "recommended": "Recommended",
+   "progress": "Step {{n}} of 10",
+   "done": "Completed"
+  }
+ },
+ "tutorPage": {
+  "eyebrow": "Socratic dialogue",
+  "title": "AI tutor",
+  "lead": "Describe a statistical task. The tutor does not give a ready answer right away — it first helps you clarify the data and the logic of choosing a method.",
+  "principleTitle": "How it works",
+  "principle": "AI guides the reasoning but does not replace your own analysis. Check its recommendations.",
+  "how3": "Come back to AI-Biostat — your progress is saved",
+  "blocked": "Inside a case the tutor is closed at the Question, Interpretation and AI check steps — you work on your own there.",
+  "privacy": "Do not send patients' personal data to the tutor. Visits to the tutor are counted for the study (count only).",
+  "examplesTitle": "How to start the conversation",
+  "examplesLead": "Copy a question and paste it into the tutor window.",
+  "examples": [
+   "I need to compare two groups. Where do I start choosing a method?",
+   "How do I tell what type my variable is?",
+   "When should I use the χ² test and when Fisher's exact test?",
+   "How do the median and mean differ, and when should I report each?",
+   "How do I phrase a conclusion without causal claims?"
+  ]
+ },
+ "analysis": {
+  "eyebrow": "Data analysis tools",
+  "title": "R and Python module",
+  "lead": "Upload an anonymised CSV file or use the training dataset. The system calculates descriptive statistics and shows reproducible R and Python code.",
+  "mode": "Training mode",
+  "step1": "1. Dataset",
+  "privacy": "Do not upload names or other personal data. The file is processed only in your browser and is not sent to the server.",
+  "upload": "Upload CSV",
+  "uploadHint": "separator: comma, semicolon or tab",
+  "useLearning": "Use the training dataset (case 21)",
+  "noData": "No data selected yet",
+  "loaded": "{{name}}: {{rows}} observations, {{cols}} variables",
+  "readError": "Could not read the CSV file. Check that the first row contains column names.",
+  "tooBig": "The file is larger than 5 MB — use part of the data for this training module.",
+  "step2": "2. Variable",
+  "detectedNumeric": "Detected as quantitative.",
+  "detectedCategorical": "Detected as categorical — a frequency table will be shown.",
+  "asCategory": "Treat as categorical (frequency table)",
+  "run": "Run analysis",
+  "tab": {
+   "results": "Results",
+   "python": "Python",
+   "r": "R"
+  },
+  "empty": "Here you will see the number of observations, mean, standard deviation, median, quartiles, minimum and maximum — or a frequency table for a categorical variable.",
+  "numericTitle": "Descriptive statistics · {{col}}",
+  "categoricalTitle": "Frequency table · {{col}}",
+  "stat": {
+   "missing": "Missing",
+   "mean": "Mean",
+   "sd": "Std. deviation",
+   "median": "Median",
+   "iqr": "Q1 – Q3",
+   "min": "Minimum",
+   "max": "Maximum"
+  },
+  "value": "Value",
+  "catFooter": "n = {{n}}, missing: {{missing}}. Percentages are of non-missing values.",
+  "moreLevels": "Showing the 30 most frequent of {{n}} values.",
+  "numericHint": "Write the interpretation yourself: central tendency and spread. Look at the minimum and maximum — are there impossible values (data entry errors)?",
+  "categoricalHint": "Describe which categories prevail. Check whether one category is written in different ways (e.g. Cyrillic «М» and Latin «M»).",
+  "codeHint": "The same calculation in R or Python. Quantiles are computed the same way as here (R default, pandas), so the numbers will match.",
+  "flowTitle": "Simulating an analytical task",
+  "flow": [
+   "Research question",
+   "Data type",
+   "Choice of method",
+   "R / Python",
+   "Interpretation",
+   "Decision"
+  ]
+ },
+ "aicheck": {
+  "eyebrow": "Critical appraisal of AI",
+  "title": "Find the statistical error",
+  "lead": "Rate the AI statement, then justify your decision. This is a trainer — it does not affect case scores.",
+  "counter": "Task {{n}} of {{total}}",
+  "task": "Task {{n}}",
+  "solved": "Solved: {{n}} of {{total}}",
+  "aiAnswer": "Answer from artificial intelligence",
+  "chooseVerdict": "Choose your rating:",
+  "verdict": {
+   "wrong": "Incorrect",
+   "right": "Correct",
+   "unknown": "Not enough information"
+  },
+  "reasonTitle": "Justification",
+  "reasonPh": "Explain: what data are involved, what the AI claims and why it is right or wrong…",
+  "words": "Words: {{n}} (at least {{min}})",
+  "check": "Check reasoning",
+  "outcome": {
+   "ok": "Correct. Your rating and justification are accepted.",
+   "wrongVerdict": "The rating is not accurate yet. Identify the data type and check whether the AI statement fits such data.",
+   "tooShort": "The rating is correct — now justify it in more detail (at least {{min}} words).",
+   "weakReason": "The rating is correct, but the key point is missing: name the data type, the appropriate method or what is missing for the conclusion."
+  },
+  "explanation": "Explanation:",
+  "next": "Next task",
+  "footer": "Answers are saved. The explanation appears after a correct answer or after the second attempt."
+ },
+ "progress": {
+  "eyebrow": "Personal trajectory",
+  "title": "My progress",
+  "lead": "Your results in cases and the trainer. Only you and your teacher can see them.",
+  "casesDone": "Cases completed",
+  "casesAvailable": "Currently available: {{n}}",
+  "avgScore": "Average result",
+  "of100": "/100",
+  "preliminary": "AI score is preliminary until the teacher's decision",
+  "aiCheck": "AI check (trainer)",
+  "aiCheckNone": "Trainer not started yet",
+  "dynamicsTitle": "Competency dynamics",
+  "dynamicsLead": "Entry diagnostic and results in completed cases across the same four competencies.",
+  "legendEntry": "Entry diagnostic",
+  "legendCases": "Result in cases",
+  "noCasesYet": "The result in cases will appear after your first completed case (with debriefing).",
+  "casesTitle": "Cases",
+  "caseDone": "Completed · {{score}} of 100 · {{grade}}",
+  "footer": "The final diagnostic (variant B) will be at the end of the pilot — then a before/after comparison will appear."
+ },
+ "analytics": {
+  "eyebrow": "Teacher panel",
+  "title": "Group learning analytics",
+  "lead": "Aggregated indicators without personal data and without ranking students.",
+  "group": "Group",
+  "allGroups": "All groups",
+  "testGroup": "The data include the test group «ТЕСТ». To keep it from skewing the figures, choose a specific group.",
+  "participants": "Participants",
+  "active7": "active in the last 7 days: {{n}}",
+  "avgScore": "Average score",
+  "avgScoreNote": "completed cases, preliminary",
+  "completed": "Cases completed",
+  "started": "started working: {{n}}",
+  "trainer": "AI check trainer",
+  "trainerUsers": "average % solved, participants: {{n}}",
+  "stepsTitle": "Success by case step",
+  "noCompleted": "No completed cases yet.",
+  "attentionEyebrow": "Needs attention",
+  "attentionTitle": "Typical difficulties",
+  "noWeak": "All steps are at 80% or higher.",
+  "advice": {
+   "data": "Finding data errors: impossible values, sign, coding.",
+   "types": "Variable types and choosing the outcome.",
+   "question": "Formulating the research question.",
+   "method": "Choosing a method: outcome type, number of groups, independence.",
+   "code": "R / Python code: column names, running without a hint.",
+   "interp": "Interpretation: proportions, statistic and p, direction, limitations.",
+   "ai": "Critical AI check: association ≠ causation."
+  },
+  "compTitle": "Group competencies",
+  "compLead": "Average of the entry diagnostic (completed: {{n}}) and of case results.",
+  "footer": "Final grading remains with the teacher. Data export for the study is in the «Participants and export» tab."
  }
 }

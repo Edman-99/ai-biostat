@@ -48,6 +48,10 @@ export const PILOT_CATALOG: CatalogEntry[] = [
 
 export const catalogEntry = (id: string) => PILOT_CATALOG.find(e => e.id === id)
 
+/** Решение методиста: студентам — 4 базовых кейса (1, 4, 21, 23), специалистам — все 5. */
+export const catalogFor = (role: string | undefined): CatalogEntry[] =>
+  role === 'specialist' ? PILOT_CATALOG : PILOT_CATALOG.filter(e => e.level === 'basic')
+
 /** Наполненные кейсы. Новый кейс = новый файл описания + одна строка здесь. */
 export class CaseRegistry {
   private cases = new Map<string, CaseDefinition>()

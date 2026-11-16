@@ -1,10 +1,12 @@
 import type { HttpClient } from '@/core/http/HttpClient'
-import type { ExportKind, ImportResult, IssuedPassword, Lang, Overview } from './types'
+import type { AnalyticsData, ExportKind, ImportResult, IssuedPassword, Lang, Overview } from './types'
 
 export class TeacherApi {
   constructor(private http: HttpClient) {}
 
   overview() { return this.http.get<Overview>('/api/teacher/overview') }
+
+  analytics() { return this.http.get<AnalyticsData>('/api/teacher/analytics') }
 
   resolveDispute(id: number, decision: 'keep' | 'change', new_score: number | null, reason: string) {
     return this.http.post<{ ok: boolean }>(`/api/teacher/disputes/${id}`, { decision, new_score, reason })

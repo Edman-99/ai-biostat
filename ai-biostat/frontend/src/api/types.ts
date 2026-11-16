@@ -1,4 +1,6 @@
 /** Формы данных, которыми обмениваются фронтенд и сервер (app/main.py). */
+import type { CaseProgress } from '@/domain/progress/types'
+import type { AiCheckAnswer } from '@/domain/aicheck/AiCheckTrainer'
 
 export type ServerRole = 'student' | 'specialist' | 'teacher'
 export type Lang = 'ru' | 'kk' | 'en'
@@ -60,4 +62,21 @@ export interface ImportResult {
   added: IssuedPassword[]
   skipped: string[]
   errors: string[]
+}
+
+/** GET /api/teacher/analytics — сырьё для сводки по группе (считается в браузере, GroupAnalytics). */
+export interface AnalyticsData {
+  people: { code: string; role: ServerRole; grp: string | null; last_active: number | null }[]
+  attempts: {
+    code: string
+    case_id: string
+    status: AttemptStatus
+    score: number | null
+    max_step: number | null
+    progress: Partial<CaseProgress> | null
+  }[]
+  /** код → проценты входной диагностики (первая попытка) */
+  diagnostics: Record<string, Record<string, number>>
+  /** код → ответы тренажёра «Проверка ИИ» */
+  trainer: Record<string, Record<string, AiCheckAnswer>>
 }

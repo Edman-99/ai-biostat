@@ -1,6 +1,7 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import '@/styles/global.css'
+import '@/styles/sections.css'
 import { createServices } from '@/app/container'
 import { ServicesProvider } from '@/app/ServicesContext'
 import { App } from './App'

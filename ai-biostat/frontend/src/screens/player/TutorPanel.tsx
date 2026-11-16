@@ -9,7 +9,7 @@ export const TUTOR_URL = 'https://chatgpt.com/g/g-6927183a0bb48191a49dda7e8525f3
 /** Шаги, где репетитор закрыт (решение методиста): 4, 7, 8. */
 const BLOCKED_STEPS = [4, 7, 8]
 
-function CopyQuestion({ q }: { q: string }) {
+export function CopyQuestion({ q }: { q: string }) {
   const { t } = useTranslation()
   const [copied, setCopied] = useState(false)
   const copy = () => {

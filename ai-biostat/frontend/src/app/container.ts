@@ -11,6 +11,8 @@ import { DebriefBuilder } from '@/domain/scoring/DebriefBuilder'
 import { DiagnosticEvaluator } from '@/domain/diagnostic/Diagnostic'
 import { SimulatedCodeRunner } from '@/domain/code/SimulatedCodeRunner'
 import type { CodeRunner } from '@/domain/code/CodeRunner'
+import { AiCheckEvaluator } from '@/domain/aicheck/AiCheckTrainer'
+import { GroupAnalytics } from '@/domain/analytics/GroupAnalytics'
 import i18n from '@/i18n'
 import { AppStore } from './AppStore'
 import { AutoSaver } from './services/AutoSaver'
@@ -35,6 +37,8 @@ export interface Services {
   debrief: DebriefBuilder
   diagnostic: DiagnosticEvaluator
   codeRunner: CodeRunner
+  aiCheck: AiCheckEvaluator
+  analytics: GroupAnalytics
 }
 
 /** Точка сборки: здесь и только здесь выбираются конкретные реализации. */
@@ -46,7 +50,10 @@ export function createServices(): Services {
   const grades = new GradeScale()
   const progressApi = new ProgressApi(http)
   const language = new LanguageService(i18n)
+  const aiCheck = new AiCheckEvaluator()
   return {
+    aiCheck,
+    analytics: new GroupAnalytics(cases, scorer, aiCheck),
     app,
     language,
     theme: new ThemeService(),

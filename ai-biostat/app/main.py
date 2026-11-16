@@ -223,6 +223,40 @@ def overview(t=Depends(teacher)):
     return {"people": [dict(r) for r in people], "disputes": [dict(r) for r in disputes]}
 
 
+def _json(text, default):
+    try:
+        return json.loads(text) if text else default
+    except ValueError:
+        return default
+
+
+@app.get("/api/teacher/analytics")
+def analytics(t=Depends(teacher)):
+    """Сырьё для сводки «Аналитика»: только коды, без ФИО. Проценты по шагам считает браузер (GroupAnalytics)."""
+    with db.connect() as con:
+        people = con.execute("""SELECT p.code, p.role, p.grp, s.updated_at AS last_active
+            FROM participants p LEFT JOIN state s ON s.code=p.code
+            WHERE p.role!='teacher' AND p.active=1""").fetchall()
+        attempts = con.execute("SELECT code, case_id, status, score, max_step, answers FROM attempts").fetchall()
+        diags = con.execute("SELECT code, pct FROM diagnostics ORDER BY ts").fetchall()
+        states = con.execute("SELECT code, json FROM state").fetchall()
+    first_diag = {}
+    for r in diags:                       # первая попытка = входная диагностика
+        first_diag.setdefault(r["code"], _json(r["pct"], {}))
+    trainer = {}
+    for r in states:
+        tr = _json(r["json"], {}).get("trainer")
+        if tr:
+            trainer[r["code"]] = tr
+    return {
+        "people": [dict(r) for r in people],
+        "attempts": [{"code": r["code"], "case_id": r["case_id"], "status": r["status"], "score": r["score"],
+                      "max_step": r["max_step"], "progress": _json(r["answers"], None)} for r in attempts],
+        "diagnostics": first_diag,
+        "trainer": trainer,
+    }
+
+
 class Resolve(BaseModel):
     decision: str          # 'keep' — оставить оценку, 'change' — изменить
     new_score: int | None = None

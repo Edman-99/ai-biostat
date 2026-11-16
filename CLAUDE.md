@@ -42,13 +42,22 @@ Claude Code читает CLAUDE.md автоматически.
   Почту для сброса пароля НЕ делаем (решение: личные данные + нет домена для писем); студентам сбрасывает преподаватель.
   На сервере 01.11.2026 участников НЕ было (тестовый набор так и не импортировали); T-0001 создан вручную через
   aib-participants import. Студентов добавлять из панели преподавателя.
+  16.11.2026 созданы тестовые P-1001 (student) и S-1001 (specialist), группа «ТЕСТ» — исключать из анализа.
+  Пароли — в Входы_на_сайт.txt в корне (только локально, скрыт через .git/info/exclude, НЕ коммитить).
+- SSH с этого ПК работает (ключ добавлен 16.11.2026). Из-за кириллицы в пути ssh не находит ключ сам —
+  указывать явно: `ssh -i ~/.ssh/id_ed25519 -o IdentitiesOnly=yes -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@32.237.28.6`.
+- Репозиторий ДОЛЖЕН быть public: сервер качает его по https без пароля. 16.11.2026 его сделали private —
+  автообновление молча сломалось (в логе «could not read Username»), вернули public.
+- На этом ПК Node.js и Python поставлены через winget (16.11.2026); в PowerShell после установки обновить PATH.
 
 ## Код (ai-biostat/)
 - `app/main.py` — FastAPI: /api/login, /logout, /me, PUT /profile, PUT /password (свой пароль, от 6 символов), GET/PUT /state (весь прогресс JSON, отсюда
   таблица attempts), /events (tutor_open, code_run, step_enter), /diagnostic, /disputes, /disputes/mine,
   /teacher/overview, /teacher/disputes/{id} (решение обязательно с обоснованием), /teacher/confirm, /teacher/participants/import (CSV текстом в JSON, пароли возвращаются один раз),
   /teacher/participants/group («Создать группу»: коды P-1001…/S-… автоматически), /teacher/participants/{code}/reset,
-  /teacher/export/{attempts|events|diagnostics|disputes}.csv (только коды, разделитель ;, BOM для Excel).
+  /teacher/export/{attempts|events|diagnostics|disputes}.csv (только коды, разделитель ;, BOM для Excel),
+  /teacher/analytics (v0.8.0: сырьё для вкладки «Аналитика» — коды, попытки с ответами, первая диагностика,
+  ответы тренажёра из state.trainer; без ФИО; проценты по шагам считает браузер — GroupAnalytics).
 - `app/participants.py` — импорт CSV и сброс пароля (общий код для API и tools/participants.py).
 - `app/db.py` — SQLite, схема + миграция колонок first_name/last_name; журнал audit.
 - `app/security.py` — pbkdf2, токены сессий (cookie aib_session, httponly; AIB_SECURE_COOKIE=1 на сервере).
@@ -66,11 +75,21 @@ Claude Code читает CLAUDE.md автоматически.
   diagnostic/), `cases/` (case21 + CaseRegistry — новый кейс = файл описания + строка в реестре),
   `app/` (AppStore — состояние и все его изменения; services/ — SessionService, AutoSaver (600 мс), ResearchTracker,
   LanguageService, ProgressSerializer; container.ts — точка сборки зависимостей), `screens/` (экраны и 10 шагов
-  плеера), `ui/`. Формат state на сервере не менялся (совместим со старой версией). Тесты логики: `npm test` (vitest).
-  Экраны: login, diag (демо 4 вопроса), diagres, home, player (кейс 21), profile, teacher (Проверка / Редактор
-  кейсов — макет / Диагностика — макет / Участники и выгрузка).
+  плеера), `ui/`. Формат state на сервере совместим со старым; с v0.8.0 добавлено необязательное поле
+  state.trainer (тренажёр «Проверка ИИ»). Тесты логики: `npm test` (vitest, 33 теста).
+  **Оформление и разделы (v0.8.0)** — по образцу демо-сайта ChatGPT пользователя (копия: папка `образец_chatgpt/`
+  в корне, только локально): боковое меню `ui/AppShell.tsx` (на телефоне ☰), шрифты Manrope + Source Serif 4,
+  тёмно-зелёная палитра с салатовым акцентом (переменные в global.css, обе темы); стили разделов — `styles/sections.css`.
+  Экраны студента/специалиста (LearnerShell): home «Обзор», diagres «Диагностика», cases «Практические кейсы»
+  (студенту 4 базовых, специалисту 5 — catalogFor), tutor «AI-репетитор» (ссылка на GPT, событие tutor_open
+  с payload.source=section), analysis «Анализ R / Python» (CSV читается только в браузере, описательная статистика
+  domain/analysis, квантили как в R type 7/pandas, код R и Python; учебный набор = данные кейса 21),
+  aicheck «Проверка ИИ» (3 задания, domain/aicheck, на баллы кейсов не влияет), progress «Мой прогресс»
+  (вход. диагностика → результат в кейсах по компетенциям, domain/progress/Competencies). Плеер кейса, вход и
+  первая диагностика — без бокового меню. Преподаватель: Проверка / Аналитика / Участники и выгрузка / Редактор
+  (макет) / Диагностика (макет).
 - `tools/participants.py`, `deploy/setup.sh` (идемпотентная установка: apt, Caddy, venv, systemd, cron backup,
-  /usr/local/bin/aib-participants), `tests/test_api.py` (5 тестов, `python -m pytest -q`).
+  /usr/local/bin/aib-participants), `tests/test_api.py` (9 тестов, `python -m pytest -q`).
 
 ## Ключевые продуктовые решения (от методиста и автора — соблюдать)
 - 10 шагов кейса; баллы 100: данные 10, типы 10, вопрос 5, метод 20 (2 попытки, −5), подготовка данных 5 +

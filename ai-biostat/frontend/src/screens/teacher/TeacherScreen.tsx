@@ -1,14 +1,16 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useServices } from '@/app/ServicesContext'
-import { TopBar } from '@/ui/TopBar'
+import { AppShell } from '@/ui/AppShell'
+import { AnalyticsTab } from './AnalyticsTab'
 import { DiagnosticsTab } from './DiagnosticsTab'
 import { EditorTab } from './EditorTab'
 import { ParticipantsTab } from './ParticipantsTab'
 import { ReviewTab } from './ReviewTab'
 import { useOverview } from './useOverview'
 
-type Tab = 'review' | 'editor' | 'diag' | 'groups'
+type Tab = 'review' | 'analytics' | 'groups' | 'editor' | 'diag'
+const TABS: Tab[] = ['review', 'analytics', 'groups', 'editor', 'diag']
 
 export function TeacherScreen() {
   const { t } = useTranslation()
@@ -17,28 +19,27 @@ export function TeacherScreen() {
   const overview = useOverview()
   const openDisputes = overview.data?.disputes.length ?? 0
 
-  const tabs: [Tab, React.ReactNode][] = [
-    ['review', <>{t('teacher.tabs.review')}{openDisputes > 0 && <> <span className="tag">{openDisputes}</span></>}</>],
-    ['editor', t('teacher.tabs.editor')], ['diag', t('teacher.tabs.diag')], ['groups', t('teacher.tabs.groups')],
-  ]
+  const select = (k: string) => {
+    setTab(k as Tab)
+    if (k === 'review' || k === 'groups') overview.reload()
+  }
 
   return (
-    <>
-      <TopBar><button className="btn ghost small" onClick={() => session.logout()}>{t('common.logout')}</button></TopBar>
-      <main className="wrap home">
-        <nav className="nav wrap-tabs">
-          {tabs.map(([k, label]) => (
-            <button key={k} aria-current={tab === k ? 'page' : undefined}
-              onClick={() => { setTab(k); if (k === 'review' || k === 'groups') overview.reload() }}>{label}</button>
-          ))}
-        </nav>
-        <div>
-          {tab === 'review' && <ReviewTab overview={overview} />}
-          {tab === 'editor' && <EditorTab />}
-          {tab === 'diag' && <DiagnosticsTab />}
-          {tab === 'groups' && <ParticipantsTab overview={overview} />}
-        </div>
-      </main>
-    </>
+    <AppShell
+      items={TABS.map(k => ({
+        key: k,
+        label: t(`teacher.tabs.${k}`),
+        badge: k === 'review' && openDisputes > 0 ? <span className="side-badge">{openDisputes}</span> : undefined,
+      }))}
+      current={tab}
+      onSelect={select}
+      topExtra={<button className="btn ghost small" onClick={() => session.logout()}>{t('common.logout')}</button>}
+    >
+      {tab === 'review' && <ReviewTab overview={overview} />}
+      {tab === 'analytics' && <AnalyticsTab />}
+      {tab === 'editor' && <EditorTab />}
+      {tab === 'diag' && <DiagnosticsTab />}
+      {tab === 'groups' && <ParticipantsTab overview={overview} />}
+    </AppShell>
   )
 }

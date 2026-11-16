@@ -8,13 +8,18 @@ import type { Lang } from '@/api/types'
 
 const LANGS: [Lang, string][] = [['ru', 'RU'], ['kk', 'KZ'], ['en', 'EN']]
 
-export function TopBar({ children }: { children?: ReactNode }) {
+/** onMenu — верхняя панель внутри AppShell: кнопка ☰ (телефон), логотип живёт в боковом меню. */
+export function TopBar({ children, onMenu, menuOpen }: { children?: ReactNode; onMenu?: () => void; menuOpen?: boolean }) {
   const { app, language, theme } = useServices()
   const currentTheme = useStore(theme)
   const { me, screen } = useAppState()
   const { t, i18n } = useTranslation()
   return (
-    <header className="top">
+    <header className={`top ${onMenu ? 'in-shell' : ''}`}>
+      {onMenu && (
+        <button className="menu-btn" onClick={onMenu} aria-expanded={!!menuOpen} aria-label={t('nav.menu')}>☰</button>
+      )}
+      {onMenu && <span className="course-label">{t('nav.course')}</span>}
       <div className="brand"><span className="mark" aria-hidden="true">AB</span><span className="bname">AI-Biostat</span>
         <span className="appver" title={t('common.build', { time: BUILD_TIME })}>v{APP_VERSION}</span></div>
       <div className="ctx">{children}</div>

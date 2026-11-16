@@ -15,6 +15,6 @@ export class ProgressSerializer {
       const total = this.scorer.score(def, c, level).total
       return [id, { ...c, score: total, grade: this.grades.gradeOf(total).letter }]
     }))
-    return { diagAns: s.diag.answers, diagDone: s.diag.done, pct: s.diag.pct, cases }
+    return { diagAns: s.diag.answers, diagDone: s.diag.done, pct: s.diag.pct, cases, trainer: s.trainer }
   }
 }
