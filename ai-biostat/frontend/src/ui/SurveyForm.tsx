@@ -72,9 +72,19 @@ export function SurveyForm({ sections, onDone }: { sections: SurveySection[]; on
                   <Scale name={`${it.id}_now`} value={a[`${it.id}_now`] as number} onChange={v => set(`${it.id}_now`, v)} />
                 </div></div>
             }
+            if (it.kind === 'yesno') {
+              return <div key={it.id} className={`survey-item ${isMissing(it.id) ? 'missing' : ''}`}>{label}
+                <div className="seg" role="radiogroup" aria-label={it.id}>
+                  {[[1, t('survey.yes')], [0, t('survey.no')]].map(([v, txt]) => (
+                    <button key={v} type="button" role="radio" aria-checked={a[it.id] === v} aria-pressed={a[it.id] === v}
+                      onClick={() => set(it.id, v as number)} style={{ minWidth: 72 }}>{txt}</button>
+                  ))}
+                </div></div>
+            }
             return <div key={it.id} className={`survey-item ${isMissing(it.id) ? 'missing' : ''}`}>{label}
               <Scale name={it.id} value={a[it.id] as number} onChange={v => set(it.id, v)} from={it.kind === 'part' ? 0 : 1}
-                labels={it.kind === 'scale' ? [t('survey.disagree'), t('survey.agree')] : [t('survey.poor'), t('survey.excellent')]} /></div>
+                labels={it.kind === 'scale' ? [t('survey.disagree'), t('survey.agree')]
+                  : it.kind === 'points' ? [t('survey.min'), t('survey.max')] : [t('survey.poor'), t('survey.excellent')]} /></div>
           })}
         </section>
       ))}

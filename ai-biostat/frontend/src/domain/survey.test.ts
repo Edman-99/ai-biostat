@@ -16,7 +16,9 @@ describe('опросник обратной связи', () => {
     expect(req).not.toContain('open_liked')
     const all = Object.fromEntries(req.map(k => [k, 3]))
     expect(missingKeys(LEARNER_SURVEY, all)).toEqual([])
-    expect(missingKeys(LEARNER_SURVEY, { ...all, part_tutor: 0 })).toEqual([])          // «не пользовался» — это ответ
+    expect(missingKeys(LEARNER_SURVEY, { ...all, fa12: 0 })).toEqual([])                // «Нет» (0) — это ответ
+    expect(req.filter(k => /^fa\d+$/.test(k)).length).toBe(12)
+    expect(req.filter(k => /^fb\d+$/.test(k)).length).toBe(12)
     expect(missingKeys(LEARNER_SURVEY, { sus1: 5 }).length).toBe(req.length - 1)
   })
 })

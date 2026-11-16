@@ -765,20 +765,24 @@
   "eyebrow": "Feedback",
   "title": "Course survey",
   "inviteTitle": "Your teacher has opened the course survey",
-  "inviteText": "About 5 minutes. Your answers help improve the course; they are stored only by participant code.",
+  "inviteText": "About 10 minutes. Your answers help improve the course; they are stored only by participant code.",
   "start": "Take the survey",
   "lead": "Please answer honestly — there are no right or wrong answers. Answers are stored only by participant code.",
   "section": {
    "sus": "Ease of use",
    "parts": "Parts of the course",
    "self": "Your skills: before the course and now",
-   "open": "Your opinion"
+   "open": "Your opinion",
+   "formA": "Evaluation of the learning technology",
+   "formB": "Effectiveness of the teaching method"
   },
   "hint": {
    "sus": "1 — strongly disagree, 5 — strongly agree.",
    "parts": "How useful was each part: 1 — not useful at all, 5 — very useful. “—” — did not use it.",
    "self": "Rate yourself from 1 to 5: your level before the course and now.",
-   "open": "Optional, but very valuable to us."
+   "open": "Optional, but very valuable to us.",
+   "formA": "Please rate the effectiveness of the new educational technology AI-Biostat (simulation-based biostatistics learning with AI). Choose “Yes” or “No”.",
+   "formB": "Rate the effectiveness of case-based learning (CBL) on a 5-point scale (5 — maximum, 1 — minimum)."
   },
   "disagree": "disagree",
   "agree": "agree",
@@ -791,6 +795,10 @@
   "fillAll": "Please answer all choice questions (not answered: {{n}}).",
   "privacy": "Answers are seen only by teachers in aggregate and by the study author (by code, without names).",
   "thanks": "Thank you! Your answers have been saved.",
-  "closed": "The survey is closed for now — your teacher will open it at the end of the course."
+  "closed": "The survey is closed for now — your teacher will open it at the end of the course.",
+  "yes": "Yes",
+  "no": "No",
+  "min": "minimum",
+  "max": "maximum"
  }
 }

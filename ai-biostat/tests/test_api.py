@@ -266,3 +266,16 @@ def test_survey_open_submit_sus_and_export():
     csv_t = t.get("/api/teacher/export/survey.csv").text
     assert "P-80" in csv_t and "T-80" not in csv_t and "self_method_now" in csv_t and "Кейсы; удобно" in csv_t
     assert "T-80" in admin.get("/api/teacher/export/survey.csv").text           # ответы преподавателей — главному
+
+
+def test_survey_export_columns_in_question_order():
+    make("P-90", "student", grp="S9"); make("T-90", "teacher")
+    s, t = client("P-90"), client("T-90")
+    t.post("/api/teacher/survey/open", json={"group": "S9", "open": True})
+    ans = {**{f"fa{i}": 1 for i in range(1, 13)}, **{f"fb{i}": 3 for i in range(1, 13)}, **{f"sus{i}": 3 for i in range(1, 11)},
+           "self_ai_before": 2, "self_ai_now": 4, "open_opinion": "ok"}
+    assert s.post("/api/survey", json={"answers": ans}).status_code == 200
+    header = t.get("/api/teacher/export/survey.csv").text.lstrip("\ufeff").splitlines()[0].split(";")
+    cols = header[5:]
+    assert cols[:3] == ["fa1", "fa2", "fa3"] and cols.index("fa10") == 9 and cols.index("fb1") == 12
+    assert cols.index("sus1") < cols.index("sus10") < cols.index("self_ai_before") < cols.index("open_opinion")

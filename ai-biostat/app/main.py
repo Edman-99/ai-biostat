@@ -686,7 +686,13 @@ def export_survey(t=Depends(teacher)):
                            vargs).fetchall()
         db.audit(con, t["code"], "export", "survey")
     parsed = [(r, _json(r["answers"], {})) for r in rows]
-    keys = sorted({k for _, a in parsed for k in a}, key=lambda k: (k.startswith("open"), k))
+    section = ("fa", "fb", "sus", "self", "tpart", "part", "open")      # порядок разделов анкеты
+
+    def order(k):                                                    # fa2 перед fa10 — по номеру вопроса
+        m = re.match(r"([a-z_]+?)(\d+)$", k)
+        prefix = next((i for i, p in enumerate(section) if k.startswith(p)), len(section))
+        return (prefix, m.group(1), int(m.group(2))) if m else (prefix, k, 0)
+    keys = sorted({k for _, a in parsed for k in a}, key=order)
     buf = io.StringIO()
     buf.write("\ufeff")
     w = csv.writer(buf, delimiter=";")
